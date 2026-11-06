@@ -51,7 +51,7 @@ h1 { margin: 0; font: 600 clamp(23px, 3vw, 32px)/1.2 'Space Grotesk', sans-serif
 .mini-lemmings { display: flex; justify-content: center; align-items: end; gap: 12px; height: 30px; }
 .mini-lemmings span { display: block; width: 13px; height: 24px; background: linear-gradient(to bottom, #bef080 0 28%, #f3d1b0 28% 51%, #a28aef 51% 86%, #f3d1b0 86%); box-shadow: -3px 4px 0 -1px #a28aef; }
 .mini-lemmings span:nth-child(2) { transform: translateY(-5px) rotate(8deg); }
-.skill-tray { display: grid; grid-template-columns: repeat(8, 1fr); padding: 13px 14px 10px; gap: 8px; }
+.skill-tray { display: grid; grid-template-columns: repeat(var(--skill-columns, 8), 1fr); padding: 13px 14px 10px; gap: 8px; }
 .skill { min-width: 0; position: relative; color: #d7cee9; border: 1px solid #574b6b; background: #3b324e; border-radius: 5px; padding: 7px 5px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .skill:hover { background: #514267; border-color: #9982bb; }
 .skill[aria-pressed="true"] { background: #c5f394; color: #354129; border-color: #d8ffb2; box-shadow: 0 0 0 2px #c5f39425; }

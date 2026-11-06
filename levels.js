@@ -7,6 +7,14 @@ export const SKILLS = [
   { id: 'basher', name: 'Basher', icon: '⇥', help: 'Tunnels horizontally through earth until the path is clear. Cannot cut steel.' },
   { id: 'miner', name: 'Miner', icon: '⤵', help: 'Digs a diagonal tunnel down and forward. Cannot cut steel.' },
   { id: 'digger', name: 'Digger', icon: '↓', help: 'Digs straight down through earth. Cannot cut steel.' },
+  { id: 'walker', name: 'Walker', icon: '↦', help: 'Cancels a ground job, including a Blocker, without sacrificing the lemming.' },
+  { id: 'turner', name: 'Turner', icon: '↶', help: 'Immediately turns a walking lemming around. Perfect for a last-second rescue.' },
+  { id: 'runner', name: 'Runner', icon: '»', help: 'Permanently doubles walking speed. Jobs, falls, and bomb timers keep their normal speed.' },
+  { id: 'platformer', name: 'Platformer', icon: '━', help: 'Lays a 96-pixel flat bridge. Useful under low ceilings where stairs will not fit.' },
+  { id: 'jumper', name: 'Jumper', icon: '⤴', help: 'Leaps about 80 pixels forward over small gaps. Requires solid footing.' },
+  { id: 'swimmer', name: 'Swimmer', icon: '≈', help: 'Permanently swims across blue water. Does not protect against lava or lethal falls.' },
+  { id: 'stoner', name: 'Stoner', icon: '◆', help: 'Sacrifices one lemming to create a solid earth platform, even in midair. Counts as a loss.' },
+  { id: 'shield', name: 'Shield', icon: '◈', help: 'Protects from lava and traps for 6 seconds. Water, bombs, and high falls are still dangerous.' },
 ];
 
 // Rectangles are [x, y, width, height, material]. Material 2 is indestructible steel.
@@ -67,5 +75,13 @@ export const LEVELS = [
     skills: { climber: 16, floater: 16, bomber: 5, blocker: 5, builder: 8, basher: 5, miner: 5, digger: 5 },
     terrain: [[30, 240, 400, 200], [260, 190, 36, 50], [490, 300, 440, 140], [650, 250, 24, 50, 2]],
     hazards: [[430, 420, 60, 20]],
+  },
+  {
+    name: 'The invention workshop', theme: 'New tricks', difficulty: 'Experiment',
+    hint: 'Try the new toolkit! A Platformer can bridge this gap without climbing into the low steel ceiling. Shift + 1–8 selects the eight new skills.',
+    total: 8, need: 6, time: 150, spawn: [110, 295], exit: [847, 300],
+    skills: Object.fromEntries(SKILLS.map(s => [s.id, 8])),
+    terrain: [[30, 300, 330, 140], [425, 300, 505, 140], [330, 268, 135, 6, 2]],
+    hazards: [[360, 420, 65, 20]],
   },
 ];

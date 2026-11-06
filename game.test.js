@@ -34,6 +34,7 @@ const solutions = [
       if (w.state === 'walk' && w.dir === 1 && w.x === 414 && g.skills.builder === 8) g.assign(w.id, 'builder');
     }
   },
+  g => { const w = g.lemmings[0]; if (w?.state === 'walk' && w.x === 346 && g.skills.platformer === 8) g.assign(w.id, 'platformer'); },
 ];
 
 for (const [index, level] of LEVELS.entries()) {

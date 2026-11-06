@@ -37,8 +37,9 @@ function tone(type) {
 SKILLS.forEach((skill, index) => {
   const button = document.createElement('button');
   button.className = 'skill'; button.dataset.skill = skill.id;
-  button.title = `${skill.name} (${index + 1}) — ${skill.help}`;
-  button.innerHTML = `<span class="key">${index + 1}</span><span class="icon" aria-hidden="true">${skill.icon}</span><span class="name">${skill.name}</span><span class="count">0</span>`;
+  const key = `${index >= 8 ? '⇧' : ''}${index % 8 + 1}`;
+  button.title = `${skill.name} (${key}) — ${skill.help}`;
+  button.innerHTML = `<span class="key">${key}</span><span class="icon" aria-hidden="true">${skill.icon}</span><span class="name">${skill.name}</span><span class="count">0</span>`;
   button.addEventListener('click', () => chooseSkill(skill.id));
   $('skills').append(button);
 });
@@ -56,6 +57,7 @@ function chooseSkill(id) {
 function loadLevel(index, first = false) {
   levelIndex = index;
   game = new Game(LEVELS[index]);
+  $('skills').style.setProperty('--skill-columns', Math.min(8, Object.keys(game.skills).length));
   paused = false; speed = 1; resultShown = false; hovered = null; keyboardTarget = null; pointer = null;
   accumulator = 0;
   selected = Object.keys(game.skills).find(id => !['bomber', 'blocker'].includes(id)) || 'blocker';
@@ -95,6 +97,7 @@ function updateUI() {
   $('nuke').disabled = game.status !== 'running' || game.nuking;
   for (const button of $('skills').children) {
     const count = game.skills[button.dataset.skill] || 0;
+    button.hidden = !(button.dataset.skill in game.level.skills);
     button.querySelector('.count').textContent = pad(count);
     button.disabled = !count;
     button.setAttribute('aria-pressed', String(button.dataset.skill === selected));
@@ -231,7 +234,7 @@ $('sound').onclick = async () => {
 };
 document.addEventListener('keydown', event => {
   if (modal.open || event.repeat || event.ctrlKey || event.metaKey || event.altKey || event.target.matches('input, button, a')) return;
-  if (/^[1-8]$/.test(event.key)) chooseSkill(SKILLS[Number(event.key) - 1].id);
+  if (/^Digit[1-8]$/.test(event.code)) chooseSkill(SKILLS[Number(event.code.slice(-1)) - 1 + (event.shiftKey ? 8 : 0)].id);
   if (event.code === 'Space') { event.preventDefault(); $('pause').click(); }
   if (event.key.toLowerCase() === 'f') $('speed').click();
   if (event.key.toLowerCase() === 'r') restart();

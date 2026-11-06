@@ -47,14 +47,29 @@ export class Game {
   assign(id, skill) {
     const w = this.lemmings.find(w => w.id === id && w.alive);
     if (this.status !== 'running' || !w || !(this.skills[skill] > 0)) return false;
-    if (skill === 'climber' || skill === 'floater') {
+    if (skill === 'walker') {
+      if (w.state === 'walk' || !this.at(w.x, w.y)) return false;
+      w.state = 'walk';
+    } else if (skill === 'turner') {
+      if (w.state !== 'walk') return false;
+      w.dir *= -1;
+    } else if (skill === 'jumper') {
+      if (w.state !== 'walk' || !this.at(w.x, w.y)) return false;
+      w.state = 'jump'; w.vy = -5; w.fall = 0;
+    } else if (skill === 'stoner') {
+      this.paint(w.x - 8, w.y - 12, 17, 13, 1);
+      this.finish(w);
+    } else if (skill === 'shield') {
+      if (w.shield) return false;
+      w.shield = 180;
+    } else if (['climber', 'floater', 'runner', 'swimmer'].includes(skill)) {
       if (w[skill]) return false;
       w[skill] = true;
     } else if (skill === 'bomber') {
       if (w.bomb) return false;
       w.bomb = 90;
     } else {
-      if (!['blocker', 'builder', 'basher', 'miner', 'digger'].includes(skill) ||
+      if (!['blocker', 'builder', 'platformer', 'basher', 'miner', 'digger'].includes(skill) ||
           !this.at(w.x, w.y) || w.state === 'climb' || w.state === 'blocker' || w.state === skill) return false;
       w.state = skill;
       w.actionTick = 0;
@@ -106,12 +121,37 @@ export class Game {
 
   move(w) {
     if (w.bomb && --w.bomb === 0) { this.explode(w); return; }
+    if (w.shield) w.shield--;
     if (w.x < 3 || w.x >= WIDTH - 3 || w.y >= HEIGHT ||
-        (this.level.hazards || []).some(([x, y, width, height]) => w.x >= x && w.x < x + width && w.y >= y && w.y < y + height)) {
+        (!w.shield && (this.level.hazards || []).some(([x, y, width, height]) => w.x >= x && w.x < x + width && w.y >= y && w.y < y + height))) {
       this.finish(w); return;
     }
     const [ex, ey] = this.level.exit;
     if (Math.abs(w.x - ex) < 15 && Math.abs(w.y - ey) < 12) { this.finish(w, true); return; }
+
+    const water = (this.level.water || []).find(([x, y, width, height]) =>
+      w.x >= x && w.x < x + width && w.y >= y && w.y < y + height);
+    if (water) {
+      if (!w.swimmer) { this.finish(w); return; }
+      w.state = 'swim'; w.y = water[1]; w.fall = 0; w.vy = 0;
+      if (this.at(w.x + w.dir * 2, w.y - 8)) w.dir *= -1;
+      else w.x += w.dir;
+      return;
+    }
+    if (w.state === 'swim') w.state = 'walk';
+
+    if (w.state === 'jump') {
+      w.vy += 0.25;
+      if (!this.at(w.x + w.dir * 3, w.y - 8)) w.x += w.dir * 2;
+      else w.dir *= -1;
+      for (let i = 0; i < Math.ceil(Math.abs(w.vy)); i++) {
+        if (w.vy < 0 && (this.at(w.x, w.y - 20) || w.y < 20)) { w.vy = 0; break; }
+        if (w.vy >= 0 && this.at(w.x, w.y)) { w.state = 'walk'; w.vy = 0; return; }
+        w.y += w.vy < 0 ? -1 : 1;
+      }
+      if (w.vy >= 5) { w.state = 'fall'; w.fall = 55; }
+      return;
+    }
 
     if (w.state === 'climb') {
       if (this.at(w.x, w.y - 18) || w.y < 20) { w.dir *= -1; w.state = 'fall'; w.fall = 0; return; }
@@ -139,14 +179,15 @@ export class Game {
     if (w.state === 'fall') w.state = 'walk';
     if (w.state === 'blocker') return;
 
-    if (w.state === 'builder') {
+    if (w.state === 'builder' || w.state === 'platformer') {
       if (++w.actionTick % 6) return;
+      const rise = w.state === 'builder' ? 2 : 0;
       const front = w.x + w.dir * 7;
       if (this.at(front, w.y - 5) || this.at(w.x + w.dir * 4, w.y - 18)) {
         w.state = 'walk'; w.dir *= -1; return;
       }
-      this.paint(w.dir > 0 ? w.x - 2 : w.x - 7, w.y - 2, 10, 2, 3);
-      w.x += w.dir * 6; w.y -= 2;
+      this.paint(w.dir > 0 ? w.x - 2 : w.x - 7, w.y - rise, 10, 2, 3);
+      w.x += w.dir * 6; w.y -= rise;
       if (++w.steps >= 16) w.state = 'walk';
       return;
     }
@@ -167,6 +208,11 @@ export class Game {
       return;
     }
 
+    this.walk(w);
+    if (w.runner && w.state === 'walk' && this.at(w.x, w.y)) this.walk(w);
+  }
+
+  walk(w) {
     if (this.lemmings.some(b => b !== w && b.alive && b.state === 'blocker' &&
       Math.abs(b.y - w.y) < 16 && (b.x - w.x) * w.dir > 0 && Math.abs(b.x - w.x) < 11)) {
       w.dir *= -1;

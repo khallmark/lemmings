@@ -27,7 +27,7 @@ export class Renderer {
   reset(game, index) {
     this.revision = -1;
     this.particles = [];
-    this.colors = palettes[index];
+    this.colors = palettes[index % palettes.length];
     const ctx = this.background.getContext('2d');
     const [sky, back, middle] = this.colors;
     ctx.fillStyle = sky; ctx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -146,7 +146,7 @@ export class Renderer {
 
   lemming(w, time, selected) {
     const c = this.ctx, x = Math.round(w.x), y = Math.round(w.y);
-    const frame = Math.floor(time / 5) % 2, working = ['builder', 'basher', 'miner', 'digger'].includes(w.state);
+    const frame = Math.floor(time / 5) % 2, working = ['builder', 'platformer', 'basher', 'miner', 'digger'].includes(w.state);
     c.save(); c.translate(x, y); c.scale(w.dir, 1);
     if (selected) { c.strokeStyle = '#f3f6ba'; c.lineWidth = 1; c.strokeRect(-10, -22, 20, 25); }
     if (w.floater && w.state === 'fall' && w.fall > 20) {
