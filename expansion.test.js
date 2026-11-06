@@ -11,6 +11,18 @@ function world(overrides = {}) {
 }
 function ticks(game, count) { for (let i = 0; i < count; i++) game.update(); }
 
+test('Holding the entrance freezes releases but not the crowd or the clock', () => {
+  const g = world({ total: 3 });
+  g.releaseHeld = true;
+  const x = g.lemmings[0].x, tick = g.tick, countdown = g.spawnIn;
+  ticks(g, 100);
+  assert.equal(g.released, 1); assert.equal(g.spawnIn, countdown);
+  assert.equal(g.tick, tick + 100); assert.equal(g.lemmings[0].x, x + 100);
+  g.releaseHeld = false;
+  ticks(g, countdown);
+  assert.equal(g.released, 2);
+});
+
 test('Walker releases a blocker without losing permanent abilities or another life', () => {
   const g = world({ skills: { blocker: 1, walker: 1, climber: 1 } });
   g.assign(0, 'climber'); g.assign(0, 'blocker');

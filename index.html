@@ -49,10 +49,17 @@
       </div>
       <div class="skill-tray" id="skills" aria-label="Assign a skill"></div>
       <div class="transport">
-        <div class="playback"><button id="pause" title="Pause or resume (Space)">Ⅱ <span>Pause</span></button><button id="speed" aria-pressed="false" title="Fast forward (F)">▶▶ <span>1×</span></button><button id="restart" title="Restart level (R)">↻ <span>Restart</span></button></div>
+        <div class="playback"><button id="pause" title="Pause or resume (Space)">Ⅱ <span>Pause</span></button><button id="speed" aria-pressed="false" title="Cycle normal, fast, and half speed (F)">▶▶ <span>1×</span></button><button id="restart" title="Restart level (R)">↻ <span>Restart</span></button></div>
         <label class="release">Release rate <input id="release" type="range" min="1" max="10" value="5"><output id="release-value">5</output></label>
         <button id="nuke" class="danger" title="End this attempt by exploding remaining lemmings">✹ <span>Nuke</span></button>
       </div>
+      <div class="field-tools"><button id="step" title="Advance one simulation tick (.)">Step ▷|</button><button id="hold" aria-pressed="false">Hold entrance</button>
+        <select id="direction" aria-label="Target direction"><option value="0">Target: either direction</option><option value="-1">Target: walking left ←</option><option value="1">Target: walking right →</option></select>
+        <button id="zoom" aria-pressed="false">Zoom in</button>
+        <button id="follow" aria-pressed="false" title="Follow the keyboard-selected lemming, or the first survivor">Follow lemming</button>
+        <button id="fullscreen" aria-pressed="false">Full screen ⛶</button>
+      </div>
+      <div class="field-tools" aria-label="Expedition status"><span id="crowd-status"></span><span id="crystals"></span><span id="target-status">Point at a lemming to inspect it.</span></div>
     </section>
 
     <div class="field-notes"><div class="hint-mark" aria-hidden="true">✦</div><p id="hint"></p><span id="selection-note">Select a skill. Click a lemming.</span></div>

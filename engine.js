@@ -19,6 +19,7 @@ export class Game {
     this.dead = 0;
     this.tick = 0;
     this.releaseInterval = 45;
+    this.releaseHeld = false;
     this.spawnIn = 15;
     this.status = 'ready';
     this.nuking = false;
@@ -112,7 +113,7 @@ export class Game {
     if (remaining > 0 && remaining <= 30 && Number.isInteger(remaining) && (remaining % 5 === 0 || remaining <= 5)) {
       this.events.push({ type: 'warning', remaining });
     }
-    if (!this.nuking && this.released < this.level.total && --this.spawnIn <= 0) {
+    if (!this.nuking && !this.releaseHeld && this.released < this.level.total && --this.spawnIn <= 0) {
       this.lemmings.push({ id: this.released++, x: this.level.spawn[0], y: this.level.spawn[1],
         dir: this.level.direction || 1, state: 'fall', alive: true, fall: 0, vy: 0,
         climber: false, floater: false, bomb: 0, actionTick: 0, steps: 0 });

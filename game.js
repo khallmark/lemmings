@@ -10,6 +10,7 @@ const renderer = new Renderer(canvas);
 const modal = $('modal');
 let game, levelIndex = 0, selected = 'basher', paused = false, speed = 1;
 let hovered = null, pointer = null, keyboardTarget = null, lastTime = 0, accumulator = 0;
+let following = null;
 let audio, score, sound = false, resultShown = false;
 let progress = {};
 try {
@@ -53,8 +54,11 @@ function loadLevel(index, first = false) {
   $('skills').style.setProperty('--skill-columns', Math.min(8, Object.keys(game.skills).length));
   paused = false; speed = 1; resultShown = false; hovered = null; keyboardTarget = null; pointer = null;
   accumulator = 0;
+  following = null;
   selected = Object.keys(game.skills).find(id => !['bomber', 'blocker'].includes(id)) || 'blocker';
   renderer.reset(game, index);
+  $('viewport').classList.remove('zoomed');
+  $('viewport').scrollTop = 0;
   $('viewport').scrollLeft = 0;
   $('level-meta').textContent = `Level ${pad(index + 1)} / ${pad(LEVELS.length)} · ${game.level.theme}`;
   $('level-title').textContent = game.level.name;
@@ -78,7 +82,11 @@ function loadLevel(index, first = false) {
 function updateUI() {
   $('out').textContent = `${pad(game.released)} / ${pad(game.level.total)}`;
   $('saved').textContent = pad(game.saved);
+  $('goal').textContent = game.saved >= game.level.need ? '✓ Goal met — rescue more for a perfect run!' : `Save ${game.level.need} of ${game.level.total} lemmings`;
   $('lost').textContent = pad(game.dead);
+  $('crowd-status').textContent = `${game.released - game.saved - game.dead} in the field · ${game.level.total - game.released} waiting${game.releaseHeld ? ' · Entrance held' : ''}`;
+  $('crystals').hidden = !game.level.crystals?.length;
+  $('crystals').textContent = `◆ Crystals ${game.crystals.size}/${game.level.crystals?.length || 0} · ${game.exitOpen ? 'Exit open' : `Need ${game.level.requiredCrystals} to unlock`}`;
   const seconds = Math.max(0, game.level.time - Math.floor(game.tick / TICK_RATE));
   $('time').textContent = `${pad(Math.floor(seconds / 60))}:${pad(seconds % 60)}`;
   $('rescue-fill').style.width = `${Math.min(100, game.saved / game.level.need * 100)}%`;
@@ -86,8 +94,18 @@ function updateUI() {
   $('pause').setAttribute('aria-pressed', String(paused));
   $('pause-label').hidden = !paused || game.status !== 'running';
   $('speed').innerHTML = `▶▶ <span>${speed}×</span>`;
-  $('speed').setAttribute('aria-pressed', String(speed > 1));
+  $('speed').setAttribute('aria-pressed', String(speed !== 1));
   $('pause').disabled = game.status !== 'running';
+  $('step').disabled = game.status !== 'running';
+  $('zoom').disabled = game.status !== 'running';
+  $('follow').disabled = game.status !== 'running' || !game.lemmings.some(w => w.alive);
+  $('follow').setAttribute('aria-pressed', String(following !== null));
+  $('follow').textContent = following === null ? 'Follow lemming' : `Following #${following + 1}`;
+  $('zoom').setAttribute('aria-pressed', String($('viewport').classList.contains('zoomed')));
+  $('zoom').textContent = $('viewport').classList.contains('zoomed') ? 'Zoom out' : 'Zoom in';
+  $('hold').disabled = game.nuking || game.released === game.level.total || ['won', 'lost'].includes(game.status);
+  $('hold').setAttribute('aria-pressed', String(game.releaseHeld));
+  $('hold').textContent = game.releaseHeld ? 'Release entrance' : 'Hold entrance';
   $('nuke').disabled = game.status !== 'running' || game.nuking;
   for (const button of $('skills').children) {
     const count = game.skills[button.dataset.skill] || 0;
@@ -116,7 +134,20 @@ function levelMenu() {
 }
 
 function help() {
-  openModal('Little feet. You make the plan.', `<p class="dialog-copy">Lemmings walk on their own and turn at walls. Select a skill, then click a lemming to assign it. Rescue the target number before time runs out. Falls over 100 pixels are fatal without a Floater. Silver terrain is indestructible.</p><div class="guide">${SKILLS.map((s, i) => `<div><strong>${i + 1}. ${s.name}</strong><p>${s.help}</p></div>`).join('')}</div><p class="dialog-copy" style="margin-top:22px"><b>Controls:</b> 1–8 select a skill; Space pauses; F toggles 3× speed; R restarts. Focus the field and use ←/→ to select a lemming, Enter to assign. Skills work while paused. On narrow screens, swipe the field sideways to see the whole level. A higher release rate sends lemmings out faster.</p>`);
+  const mechanics = {
+    water: 'Water needs a Swimmer. A Floater does not protect against drowning.',
+    portals: 'Enter the blue portal to emerge at its matching orange exit.',
+    gates: 'Walk onto the numbered pressure switch to open its gate permanently.',
+    springs: 'Gold spring pads launch walkers across short gaps without spending a skill.',
+    wind: 'Arrow-marked wind carries open parachutes in the indicated direction.',
+    hazards: 'Hazards are fatal without a Shield. Cycling traps are safe only while marked SAFE.',
+    crystals: 'Collect crystals by walking close to them. The counter shows how many unlock HOME.',
+  };
+  openModal('Little feet. You make the plan.', `<p class="dialog-copy">Lemmings walk on their own and turn at walls. Select a skill, then click a lemming. Falls over 100 pixels are fatal without a Floater. Silver terrain is indestructible.</p>
+    <h3>In this expedition</h3><p class="dialog-copy">${game.level.hint}</p>
+    ${Object.entries(mechanics).filter(([key]) => game.level[key]?.length).map(([, text]) => `<p class="dialog-copy">${text}</p>`).join('')}
+    <div class="guide">${SKILLS.filter(s => s.id in game.level.skills).map(s => { const i = SKILLS.indexOf(s); return `<div><strong>${i >= 8 ? 'Shift+' : ''}${i % 8 + 1} · ${s.name}</strong><p>${s.help}</p></div>`; }).join('')}</div>
+    <p class="dialog-copy" style="margin-top:22px"><b>Controls:</b> 1–8 select classic skills; Shift+1–8 select expansion skills. Space pauses; F cycles 1×, 3×, 0.5×; period steps one tick; R restarts. Focus the field and use ←/→ to select a lemming, Enter to assign. Skills work while paused. Hold entrance stops new releases, not the clock. Direction filtering separates overlapping lemmings. Zoom magnifies the field; scroll to explore, or Follow a keyboard-selected lemming.</p>`);
 }
 
 function confirmAction(title, copy, label, action) {
@@ -132,6 +163,8 @@ function restart() {
 
 function results() {
   resultShown = true;
+  $('viewport').classList.remove('zoomed');
+  $('viewport').scrollTop = 0; $('viewport').scrollLeft = 0;
   paused = false;
   const won = game.status === 'won';
   if (won) {
@@ -149,9 +182,11 @@ function results() {
   $('start').focus({ preventScroll: true });
 }
 
+function targetable(w) { return w.alive && (!$('direction').value || Number($('direction').value) === 0 || w.dir === Number($('direction').value)); }
+
 function nearest(x, y) {
   let best = null, distance = 24;
-  for (const w of game.lemmings) if (w.alive) {
+  for (const w of game.lemmings) if (targetable(w)) {
     const d = Math.hypot(w.x - x, w.y - 10 - y);
     if (d < distance) { best = w.id; distance = d; }
   }
@@ -181,7 +216,7 @@ canvas.addEventListener('click', event => {
   assign(nearest((event.clientX - rect.left) * WIDTH / rect.width, (event.clientY - rect.top) * HEIGHT / rect.height));
 });
 canvas.addEventListener('keydown', event => {
-  const alive = game.lemmings.filter(w => w.alive).sort((a, b) => a.x - b.x);
+  const alive = game.lemmings.filter(targetable).sort((a, b) => a.x - b.x);
   if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
     event.preventDefault(); pointer = null;
     if (!alive.length) return;
@@ -204,7 +239,38 @@ $('start').onclick = () => {
   updateUI();
 };
 $('pause').onclick = () => { if (game.status === 'running') { paused = !paused; updateUI(); } };
-$('speed').onclick = () => { speed = speed === 1 ? 3 : 1; updateUI(); };
+$('step').onclick = () => {
+  if (game.status !== 'running') return;
+  paused = true; accumulator = 0; game.update(); updateUI();
+};
+$('speed').onclick = () => { speed = speed === 1 ? 3 : speed === 3 ? .5 : 1; updateUI(); };
+$('hold').onclick = () => { game.releaseHeld = !game.releaseHeld; updateUI(); };
+$('direction').onchange = () => { keyboardTarget = null; hovered = null; };
+$('fullscreen').hidden = !document.fullscreenEnabled;
+$('fullscreen').onclick = async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.querySelector('.app').requestFullscreen();
+  } catch { announce('Full screen is unavailable. The game still works in this window.'); }
+};
+document.addEventListener('fullscreenchange', () => {
+  $('fullscreen').setAttribute('aria-pressed', String(!!document.fullscreenElement));
+  $('fullscreen').textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen ⛶';
+  pointer = null;
+});
+$('follow').onclick = () => {
+  following = following === null ? (game.lemmings.find(w => w.id === keyboardTarget && w.alive) || game.lemmings.find(w => w.alive))?.id ?? null : null;
+  pointer = null; updateUI();
+};
+$('zoom').onclick = () => {
+  $('viewport').classList.toggle('zoomed');
+  pointer = null;
+  const scale = canvas.clientWidth / WIDTH;
+  const target = game.lemmings.find(w => w.id === hovered && w.alive) || { x: game.level.spawn[0], y: game.level.spawn[1] };
+  $('viewport').scrollLeft = target.x * scale - $('viewport').clientWidth / 2;
+  $('viewport').scrollTop = target.y * scale - $('viewport').clientHeight / 2;
+  updateUI();
+};
 $('restart').onclick = restart;
 $('nuke').onclick = () => confirmAction('End this attempt?', 'Stop releasing lemmings and explode those still outside. Already rescued lemmings are safe. If you met the rescue goal, this still completes the level.', 'Nuke remaining', () => { game.nuke(); paused = false; updateUI(); });
 $('release').oninput = event => {
@@ -241,10 +307,11 @@ for (const id of ['music-volume', 'effects-volume']) {
   });
 }
 document.addEventListener('keydown', event => {
-  if (modal.open || event.repeat || event.ctrlKey || event.metaKey || event.altKey || event.target.matches('input, button, a')) return;
+  if (modal.open || event.repeat || event.ctrlKey || event.metaKey || event.altKey || event.target.matches('input, select, button, a')) return;
   if (/^Digit[1-8]$/.test(event.code)) chooseSkill(SKILLS[Number(event.code.slice(-1)) - 1 + (event.shiftKey ? 8 : 0)].id);
   if (event.code === 'Space') { event.preventDefault(); $('pause').click(); }
   if (event.key.toLowerCase() === 'f') $('speed').click();
+  if (event.key === '.') $('step').click();
   if (event.key.toLowerCase() === 'r') restart();
 });
 document.addEventListener('visibilitychange', () => {
@@ -276,6 +343,14 @@ function frame(now) {
   }
   if (['won', 'lost'].includes(game.status) && !resultShown) results();
   hovered = pointer ? nearest(pointer.x, pointer.y) : keyboardTarget;
+  const target = game.lemmings.find(w => w.id === hovered && w.alive);
+  const tracked = game.lemmings.find(w => w.id === following && w.alive);
+  if (tracked) {
+    const scale = canvas.clientWidth / WIDTH;
+    $('viewport').scrollLeft = tracked.x * scale - $('viewport').clientWidth / 2;
+    $('viewport').scrollTop = tracked.y * scale - $('viewport').clientHeight / 2;
+  } else following = null;
+  $('target-status').textContent = target ? `#${target.id + 1} ${target.dir > 0 ? '→' : '←'} ${target.state}${['climber', 'floater', 'runner', 'swimmer', 'shield'].filter(s => target[s]).map(s => ` · ${s}`).join('')}` : 'Point at a lemming to inspect it.';
   renderer.draw(game, hovered, active);
   // DOM values only change at simulation cadence, not for every painted frame.
   if (frame.lastTick !== game.tick) { updateUI(); frame.lastTick = game.tick; }

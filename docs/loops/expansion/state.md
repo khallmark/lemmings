@@ -1,10 +1,10 @@
 # Expansion state
 
-Iteration: 60 / 100
+Iteration: 72 / 100
 
-Last improvement: Swimmers wear goggles and animate a swimming stroke
+Last improvement: Contextual field guide explains only this level’s skills and mechanisms
 
-Verification: ℹ tests 46; ℹ pass 46; ℹ fail 0
+Verification: ℹ tests 47; ℹ pass 47; ℹ fail 0
 
 Decision: continue
 
