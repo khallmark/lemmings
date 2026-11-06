@@ -38,6 +38,27 @@ const solutions = [
   g => { for (const w of g.lemmings) if (w.alive && !w.swimmer) g.assign(w.id, 'swimmer'); },
   g => { for (const w of g.lemmings) if (w.alive && w.state === 'walk' && w.x === 345) g.assign(w.id, 'jumper'); },
   g => { for (const w of g.lemmings) if (w.alive && w.x === 330 && !w.shield) g.assign(w.id, 'shield'); },
+  g => { const w = g.lemmings[0]; if (w?.state === 'walk' && w.x === 290 && g.skills.basher === 3) g.assign(w.id, 'basher'); },
+  g => { const w = g.lemmings[0]; if (w?.state === 'walk' && w.x === 240 && g.skills.basher === 3) g.assign(w.id, 'basher'); },
+  g => { for (const w of g.lemmings) if (w.alive && !w.floater) g.assign(w.id, 'floater'); },
+  g => { for (const w of g.lemmings) if (w.alive) { if (!w.runner) g.assign(w.id, 'runner'); if (w.x >= 325 && w.x <= 330 && !w.shield) g.assign(w.id, 'shield'); } },
+  g => { for (const w of g.lemmings) if (w.alive && w.x === 330 && w.dir === -1) g.assign(w.id, 'turner'); },
+  g => {
+    const w = g.lemmings[0];
+    if (w?.state === 'walk' && w.x === 495 && g.skills.blocker) g.assign(0, 'blocker');
+    if (w?.state === 'blocker' && g.lemmings[9]?.dir === 1) { g.assign(0, 'walker'); g.assign(0, 'turner'); }
+  },
+  g => { const w = g.lemmings[0]; if (w?.state === 'walk' && [346, 586].includes(w.x)) g.assign(0, 'platformer'); },
+  g => { const w = g.lemmings[0]; if (w?.state === 'walk' && w.x === 160 && g.skills.digger === 2) g.assign(0, 'digger'); },
+  g => { for (const w of g.lemmings) if (w.alive) { if (!w.swimmer) g.assign(w.id, 'swimmer'); if (w.id === 0 && w.x === 160 && w.state === 'walk' && g.skills.miner === 3) g.assign(0, 'miner'); } },
+  g => { for (const w of g.lemmings) if (w.alive && !w.climber) g.assign(w.id, 'climber'); },
+  g => { for (const w of g.lemmings) if (w.alive) { if (!w.floater) g.assign(w.id, 'floater'); if (w.id === 0 && w.x === 260 && w.state === 'walk' && g.skills.digger === 2) g.assign(0, 'digger'); } },
+  g => { for (const w of g.lemmings) if (w.alive) {
+    if (!w.swimmer) g.assign(w.id, 'swimmer');
+    if (w.id === 0 && w.state === 'walk' && w.x === 210 && g.skills.basher === 3) g.assign(0, 'basher');
+    if (w.id === 0 && w.state === 'walk' && w.x === 314 && g.skills.builder === 3) g.assign(0, 'builder');
+    if (w.x === 680 && !w.shield) g.assign(w.id, 'shield');
+  } },
 ];
 
 for (const [index, level] of LEVELS.entries()) {

@@ -1,10 +1,10 @@
 # Expansion state
 
-Iteration: 24 / 100
+Iteration: 36 / 100
 
-Last improvement: Ember crossing tests shield timing instead of permanent protection
+Last improvement: Grand homecoming combines excavation, bridging, water, switches, crystals, and lava
 
-Verification: ℹ tests 34; ℹ pass 34; ℹ fail 0
+Verification: ℹ tests 46; ℹ pass 46; ℹ fail 0
 
 Decision: continue
 
