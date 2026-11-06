@@ -1,0 +1,128 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Walker Playground</title>
+<style>
+  :root { --ink: #333; --block: #c44; --plat: #48a; }
+  body { font: 16px/1.5 system-ui; margin: 0; padding: 24px 4% 0; background: #fafafa; color: #222; }
+  h1, h2 { margin: 0 0 8px; }
+  section { position: relative; margin: 0 0 120px; }
+  .hint { color: #666; max-width: 60ch; }
+  .floor { border-top: 3px solid var(--ink); }
+
+  /* every step is 8px = 2 sprite px, low enough to walk up; the tall ones block */
+  .stairs { display: flex; align-items: flex-end; height: 140px; }
+  .stairs div { flex: 1; background: var(--ink); }
+  .stairs.tall div:nth-child(odd) { background: var(--block); }
+
+  /* platforms sized in % so they move when the window is resized */
+  .sky { height: 520px; }
+  .sky div { position: absolute; height: 6px; background: var(--plat); border-radius: 3px; }
+
+  .pit { display: flex; gap: 18%; align-items: flex-end; height: 80px; }
+  .pit div { flex: 1; height: 12px; background: var(--ink); }
+
+  .walls { display: flex; justify-content: space-between; align-items: flex-end; height: 160px; }
+  .walls div { width: 10px; background: var(--block); }
+
+  .cards { display: flex; flex-wrap: wrap; gap: 24px; }
+  .card { flex: 1 1 220px; border: 2px solid var(--ink); border-radius: 6px; padding: 12px 16px; }
+  .card button { margin-top: 8px; }
+
+  .cage { border: 3px solid var(--ink); height: 200px; display: flex; align-items: center; justify-content: center; }
+  .cage img { width: 30%; height: 50px; }
+  .prose { column-width: 28ch; column-gap: 32px; }
+  .gh { float: right; display: flex; gap: 8px; margin: 0 0 8px 16px; }
+</style>
+
+<section>
+  <div class="gh">
+    <a class="github-button" href="https://github.com/MarkBlah/lemmings" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star MarkBlah/lemmings on GitHub">Star</a>
+    <a class="github-button" href="https://github.com/MarkBlah/lemmings/fork" data-icon="octicon-repo-forked" data-size="large" data-show-count="true" aria-label="Fork MarkBlah/lemmings on GitHub">Fork</a>
+  </div>
+  <h1>Walker playground</h1>
+  <p class="hint">Add walkers with the button below or <code>__walker.add()</code>. Drag one to carry it, flick it to throw it. Resize the window and walkers ride the surface they're standing on, so a fast resize launches them.</p>
+  <button onclick="__walker.add()">Add a walker</button>
+</section>
+
+<section>
+  <h2>Stairs</h2>
+  <div class="stairs">
+    <div style="height:8px"></div><div style="height:16px"></div><div style="height:24px"></div><div style="height:32px"></div>
+    <div style="height:40px"></div><div style="height:48px"></div><div style="height:56px"></div><div style="height:64px"></div>
+    <div style="height:56px"></div><div style="height:48px"></div><div style="height:40px"></div><div style="height:32px"></div>
+    <div style="height:24px"></div><div style="height:16px"></div><div style="height:8px"></div>
+  </div>
+  <div class="floor"></div>
+</section>
+
+<section>
+  <h2>Stairs too tall to climb</h2>
+  <div class="stairs tall">
+    <div style="height:10px"></div><div style="height:30px"></div><div style="height:50px"></div><div style="height:70px"></div>
+    <div style="height:90px"></div><div style="height:110px"></div><div style="height:130px"></div>
+  </div>
+  <div class="floor"></div>
+</section>
+
+<section>
+  <h2>Floating platforms</h2>
+  <div class="sky">
+    <div style="left:0;top:60px;width:30%"></div>
+    <div style="left:40%;top:40px;width:20%"></div>
+    <div style="left:70%;top:90px;width:30%"></div>
+    <div style="left:10%;top:180px;width:25%"></div>
+    <div style="left:45%;top:220px;width:15%"></div>
+    <div style="left:65%;top:260px;width:25%"></div>
+    <div style="left:0;top:340px;width:20%"></div>
+    <div style="left:30%;top:380px;width:40%"></div>
+    <div style="left:80%;top:420px;width:20%"></div>
+  </div>
+  <div class="floor"></div>
+</section>
+
+<section>
+  <h2>Pit</h2>
+  <div class="pit"><div></div><div></div></div>
+  <div class="floor" style="margin-top:60px"></div>
+</section>
+
+<section>
+  <h2>Walls</h2>
+  <div class="walls">
+    <div style="height:160px"></div><div style="height:40px"></div><div style="height:12px"></div>
+    <div style="height:8px"></div><div style="height:80px"></div><div style="height:160px"></div>
+  </div>
+  <div class="floor"></div>
+</section>
+
+<section>
+  <h2>Cards</h2>
+  <p class="hint">These wrap onto new rows as the window narrows, which shoves anyone standing on them.</p>
+  <div class="cards">
+    <div class="card"><b>Card one</b><p>Borders are solid. Walk the top edge or get trapped inside.</p><button>Button</button></div>
+    <div class="card"><b>Card two</b><p>Buttons and form fields are solid too.</p><input placeholder="Input"></div>
+    <div class="card"><b>Card three</b><p>Text is a floor you can land on but walk through.</p></div>
+    <div class="card"><b>Card four</b><p>Throw a walker up here.</p><button>Another</button></div>
+  </div>
+</section>
+
+<section>
+  <h2>Cage</h2>
+  <div class="cage">
+    <img alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%2348a'/%3E%3C/svg%3E">
+  </div>
+</section>
+
+<section>
+  <h2>Reading</h2>
+  <div class="prose">
+    <p>Columns of text reflow a lot when the window changes size, so this is a good place to try a resize launch. Each line of text is its own floor. Walkers can drop from line to line, fall off the end of a short line, and land on whatever is below.</p>
+    <p>Lines sit closer together than a walker is tall, so text never blocks them. Only borders, boxes, buttons, images and fields do. That keeps walkers from getting stuck between two lines of a paragraph.</p>
+    <p>Near the bottom of the page there is one long floor to catch anything that falls all the way down.</p>
+  </div>
+</section>
+
+<div class="floor" style="margin-top:200px;height:60px;background:#e6e6e6"></div>
+<script src="walker.min.js"></script>
+<script async defer src="https://cdn.jsdelivr.net/npm/github-buttons@2.33.1/dist/buttons.min.js"></script>

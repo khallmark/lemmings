@@ -1,128 +1,66 @@
 <!doctype html>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Walker Playground</title>
-<style>
-  :root { --ink: #333; --block: #c44; --plat: #48a; }
-  body { font: 16px/1.5 system-ui; margin: 0; padding: 24px 4% 0; background: #fafafa; color: #222; }
-  h1, h2 { margin: 0 0 8px; }
-  section { position: relative; margin: 0 0 120px; }
-  .hint { color: #666; max-width: 60ch; }
-  .floor { border-top: 3px solid var(--ink); }
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#29243d">
+  <meta name="description" content="Little lemmings. Big responsibility. An original eight-level rescue puzzle game, playable in your browser.">
+  <title>Lemmings — Little feet, big adventure</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23b9ec82' d='M7 3h18v9H7z'/%3E%3Cpath fill='%23ffe1ba' d='M10 12h15v8H10z'/%3E%3Cpath fill='%239d8cee' d='M9 20h13v12H9z'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <header class="masthead">
+      <a href="./" class="brand" aria-label="Lemmings home"><span class="brand-sprite" aria-hidden="true"></span>Lemmings<span class="edition">a little rescue mission</span></a>
+      <nav aria-label="Game menu">
+        <button id="levels-button">Level select <span aria-hidden="true">▦</span></button>
+        <button id="help-button">How to play <span aria-hidden="true">?</span></button>
+        <button id="sound" aria-pressed="false" aria-label="Turn sound on">Sound off</button>
+      </nav>
+    </header>
 
-  /* every step is 8px = 2 sprite px, low enough to walk up; the tall ones block */
-  .stairs { display: flex; align-items: flex-end; height: 140px; }
-  .stairs div { flex: 1; background: var(--ink); }
-  .stairs.tall div:nth-child(odd) { background: var(--block); }
+    <section class="level-heading" aria-labelledby="level-title">
+      <div><p id="level-meta">Level 01 / 08 · Mosslight hollow</p><h1 id="level-title">A little breakthrough</h1></div>
+      <div class="mission"><span class="mission-dot"></span><div>Bring them home<strong id="goal">Save 8 of 10 lemmings</strong></div></div>
+    </section>
 
-  /* platforms sized in % so they move when the window is resized */
-  .sky { height: 520px; }
-  .sky div { position: absolute; height: 6px; background: var(--plat); border-radius: 3px; }
+    <section class="game-shell" aria-label="Lemmings game">
+      <div class="status-bar">
+        <div><span class="status-label">Out</span><strong id="out">00 / 10</strong></div>
+        <div><span class="status-label">Saved</span><strong id="saved">00</strong><span id="saved-goal">/ 08 needed</span></div>
+        <div class="rescue-track" aria-hidden="true"><i id="rescue-fill"></i></div>
+        <div><span class="status-label">Lost</span><strong id="lost">00</strong></div>
+        <div class="time"><span class="status-label">Time</span><strong id="time">02:00</strong></div>
+      </div>
+      <div class="viewport" id="viewport">
+        <canvas id="world" width="960" height="440" tabindex="0" aria-label="Game field. Select a skill, then click a lemming. Keyboard: arrow keys select a lemming, Enter assigns the skill, 1 through 8 select skills, Space pauses."></canvas>
+        <div id="pause-label" hidden>Paused <span>Take your time. You can still assign skills.</span></div>
+        <div id="briefing" class="briefing">
+          <div class="briefing-card">
+            <div class="mini-lemmings" aria-hidden="true"><span></span><span></span><span></span></div>
+            <p id="briefing-kicker">Small feet. Big adventure.</p>
+            <h2 id="briefing-title">A little help goes a long way.</h2>
+            <p id="briefing-copy">They keep walking. You make the plan. Give your little friends the right skills and guide them safely home.</p>
+            <button class="primary" id="start">Let’s go! <span aria-hidden="true">▶</span></button>
+            <small id="briefing-foot">8 original levels · 8 useful skills · A lot of little lives</small>
+          </div>
+        </div>
+      </div>
+      <div class="skill-tray" id="skills" aria-label="Assign a skill"></div>
+      <div class="transport">
+        <div class="playback"><button id="pause" title="Pause or resume (Space)">Ⅱ <span>Pause</span></button><button id="speed" aria-pressed="false" title="Fast forward (F)">▶▶ <span>1×</span></button><button id="restart" title="Restart level (R)">↻ <span>Restart</span></button></div>
+        <label class="release">Release rate <input id="release" type="range" min="1" max="10" value="5"><output id="release-value">5</output></label>
+        <button id="nuke" class="danger" title="End this attempt by exploding remaining lemmings">✹ <span>Nuke</span></button>
+      </div>
+    </section>
 
-  .pit { display: flex; gap: 18%; align-items: flex-end; height: 80px; }
-  .pit div { flex: 1; height: 12px; background: var(--ink); }
+    <div class="field-notes"><div class="hint-mark" aria-hidden="true">✦</div><p id="hint"></p><span id="selection-note">Select a skill. Click a lemming.</span></div>
+    <p id="announcement" class="sr-only" role="status" aria-live="polite"></p>
+    <footer><span>Made for a little pause in your day.</span><div><span><kbd>1</kbd>–<kbd>8</kbd> skills <kbd>Space</kbd> pause</span><a href="playground.html">Original walker playground ↗</a></div></footer>
+  </main>
 
-  .walls { display: flex; justify-content: space-between; align-items: flex-end; height: 160px; }
-  .walls div { width: 10px; background: var(--block); }
-
-  .cards { display: flex; flex-wrap: wrap; gap: 24px; }
-  .card { flex: 1 1 220px; border: 2px solid var(--ink); border-radius: 6px; padding: 12px 16px; }
-  .card button { margin-top: 8px; }
-
-  .cage { border: 3px solid var(--ink); height: 200px; display: flex; align-items: center; justify-content: center; }
-  .cage img { width: 30%; height: 50px; }
-  .prose { column-width: 28ch; column-gap: 32px; }
-  .gh { float: right; display: flex; gap: 8px; margin: 0 0 8px 16px; }
-</style>
-
-<section>
-  <div class="gh">
-    <a class="github-button" href="https://github.com/MarkBlah/lemmings" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star MarkBlah/lemmings on GitHub">Star</a>
-    <a class="github-button" href="https://github.com/MarkBlah/lemmings/fork" data-icon="octicon-repo-forked" data-size="large" data-show-count="true" aria-label="Fork MarkBlah/lemmings on GitHub">Fork</a>
-  </div>
-  <h1>Walker playground</h1>
-  <p class="hint">Add walkers with the button below or <code>__walker.add()</code>. Drag one to carry it, flick it to throw it. Resize the window and walkers ride the surface they're standing on, so a fast resize launches them.</p>
-  <button onclick="__walker.add()">Add a walker</button>
-</section>
-
-<section>
-  <h2>Stairs</h2>
-  <div class="stairs">
-    <div style="height:8px"></div><div style="height:16px"></div><div style="height:24px"></div><div style="height:32px"></div>
-    <div style="height:40px"></div><div style="height:48px"></div><div style="height:56px"></div><div style="height:64px"></div>
-    <div style="height:56px"></div><div style="height:48px"></div><div style="height:40px"></div><div style="height:32px"></div>
-    <div style="height:24px"></div><div style="height:16px"></div><div style="height:8px"></div>
-  </div>
-  <div class="floor"></div>
-</section>
-
-<section>
-  <h2>Stairs too tall to climb</h2>
-  <div class="stairs tall">
-    <div style="height:10px"></div><div style="height:30px"></div><div style="height:50px"></div><div style="height:70px"></div>
-    <div style="height:90px"></div><div style="height:110px"></div><div style="height:130px"></div>
-  </div>
-  <div class="floor"></div>
-</section>
-
-<section>
-  <h2>Floating platforms</h2>
-  <div class="sky">
-    <div style="left:0;top:60px;width:30%"></div>
-    <div style="left:40%;top:40px;width:20%"></div>
-    <div style="left:70%;top:90px;width:30%"></div>
-    <div style="left:10%;top:180px;width:25%"></div>
-    <div style="left:45%;top:220px;width:15%"></div>
-    <div style="left:65%;top:260px;width:25%"></div>
-    <div style="left:0;top:340px;width:20%"></div>
-    <div style="left:30%;top:380px;width:40%"></div>
-    <div style="left:80%;top:420px;width:20%"></div>
-  </div>
-  <div class="floor"></div>
-</section>
-
-<section>
-  <h2>Pit</h2>
-  <div class="pit"><div></div><div></div></div>
-  <div class="floor" style="margin-top:60px"></div>
-</section>
-
-<section>
-  <h2>Walls</h2>
-  <div class="walls">
-    <div style="height:160px"></div><div style="height:40px"></div><div style="height:12px"></div>
-    <div style="height:8px"></div><div style="height:80px"></div><div style="height:160px"></div>
-  </div>
-  <div class="floor"></div>
-</section>
-
-<section>
-  <h2>Cards</h2>
-  <p class="hint">These wrap onto new rows as the window narrows, which shoves anyone standing on them.</p>
-  <div class="cards">
-    <div class="card"><b>Card one</b><p>Borders are solid. Walk the top edge or get trapped inside.</p><button>Button</button></div>
-    <div class="card"><b>Card two</b><p>Buttons and form fields are solid too.</p><input placeholder="Input"></div>
-    <div class="card"><b>Card three</b><p>Text is a floor you can land on but walk through.</p></div>
-    <div class="card"><b>Card four</b><p>Throw a walker up here.</p><button>Another</button></div>
-  </div>
-</section>
-
-<section>
-  <h2>Cage</h2>
-  <div class="cage">
-    <img alt="" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%25' height='100%25' fill='%2348a'/%3E%3C/svg%3E">
-  </div>
-</section>
-
-<section>
-  <h2>Reading</h2>
-  <div class="prose">
-    <p>Columns of text reflow a lot when the window changes size, so this is a good place to try a resize launch. Each line of text is its own floor. Walkers can drop from line to line, fall off the end of a short line, and land on whatever is below.</p>
-    <p>Lines sit closer together than a walker is tall, so text never blocks them. Only borders, boxes, buttons, images and fields do. That keeps walkers from getting stuck between two lines of a paragraph.</p>
-    <p>Near the bottom of the page there is one long floor to catch anything that falls all the way down.</p>
-  </div>
-</section>
-
-<div class="floor" style="margin-top:200px;height:60px;background:#e6e6e6"></div>
-<script src="walker.min.js"></script>
-<script async defer src="https://cdn.jsdelivr.net/npm/github-buttons@2.33.1/dist/buttons.min.js"></script>
+  <dialog id="modal" aria-labelledby="modal-title"><div class="modal-top"><h2 id="modal-title"></h2><button id="close-modal" aria-label="Close dialog">×</button></div><div id="modal-content"></div></dialog>
+  <script type="module" src="game.js"></script>
+</body>
+</html>
