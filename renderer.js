@@ -22,11 +22,13 @@ export class Renderer {
     this.ground = document.createElement('canvas');
     this.ground.width = WIDTH; this.ground.height = HEIGHT;
     this.particles = [];
+    this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   }
 
   reset(game, index) {
     this.revision = -1;
     this.particles = [];
+    this.lastTick = game.tick;
     this.colors = palettes[index % palettes.length];
     const ctx = this.background.getContext('2d');
     const [sky, back, middle] = this.colors;
@@ -84,19 +86,24 @@ export class Renderer {
   }
 
   effect(event) {
-    if (!['save', 'boom', 'lost', 'assign'].includes(event.type)) return;
+    if (this.reducedMotion.matches) return;
+    if (event.x === undefined) return;
+    if (!['save', 'boom', 'lost', 'assign', 'portal', 'crystal'].includes(event.type)) return;
     const count = event.type === 'boom' ? 32 : 8;
     for (let i = 0; i < count; i++) this.particles.push({ x: event.x, y: event.y - 8,
       vx: (Math.random() - .5) * 4, vy: -Math.random() * 3 - 1, life: 30,
-      color: event.type === 'boom' ? '#f1bc7c' : event.type === 'lost' ? '#c78eaa' : '#cbefa0' });
+      color: event.type === 'portal' ? '#8adff0' : event.type === 'boom' ? '#f1bc7c' : event.type === 'lost' ? '#c78eaa' : '#cbefa0' });
   }
 
   draw(game, hovered, animate) {
     this.terrain(game);
+    const elapsed = animate ? Math.max(0, game.tick - this.lastTick) : 0;
+    this.lastTick = game.tick;
     const c = this.ctx;
     c.drawImage(this.background, 0, 0);
     c.drawImage(this.ground, 0, 0);
-    const time = game.tick;
+    const time = this.reducedMotion.matches ? 0 : game.tick;
+    if (this.reducedMotion.matches) this.particles = [];
     for (const [x, y, width, height, direction] of game.level.wind || []) {
       c.fillStyle = '#a9d5ea18'; c.fillRect(x, y, width, height);
       c.fillStyle = '#99c7df'; c.font = '16px monospace'; c.textAlign = 'left';
@@ -147,7 +154,8 @@ export class Renderer {
     for (const w of game.lemmings) if (w.alive) this.lemming(w, time, w.id === hovered);
     for (const p of this.particles) {
       c.globalAlpha = p.life / 30; c.fillStyle = p.color; c.fillRect(Math.round(p.x), Math.round(p.y), 3, 3);
-      if (animate) { p.x += p.vx; p.y += p.vy; p.vy += .1; p.life--; }
+      p.x += p.vx * elapsed; p.y += p.vy * elapsed + .05 * elapsed ** 2;
+      p.vy += .1 * elapsed; p.life -= elapsed;
     }
     this.particles = this.particles.filter(p => p.life > 0);
     c.globalAlpha = 1;
@@ -188,6 +196,10 @@ export class Renderer {
     const c = this.ctx, x = Math.round(w.x), y = Math.round(w.y);
     const frame = Math.floor(time / 5) % 2, working = ['builder', 'platformer', 'basher', 'miner', 'digger'].includes(w.state);
     c.save(); c.translate(x, y); c.scale(w.dir, 1);
+    if (w.runner && w.state === 'walk') {
+      c.fillStyle = '#f7ce86';
+      c.fillRect(-19, -12, 9, 2); c.fillRect(-15, -6, 6, 2);
+    }
     if (selected) { c.strokeStyle = '#f3f6ba'; c.lineWidth = 1; c.strokeRect(-10, -22, 20, 25); }
     if (w.shield) {
       c.strokeStyle = w.shield < 45 ? '#ffbd79' : '#84ebf2'; c.lineWidth = 2;
@@ -202,9 +214,14 @@ export class Renderer {
     c.fillRect(-5, -19, 11, 5); c.fillRect(-7, -17, 4, 5); c.fillRect(-3, -21, 3, 3);
     c.fillStyle = '#f3d3bd'; c.fillRect(-3, -14, 9, 5); c.fillRect(5, -12, 3, 2);
     c.fillStyle = '#292335'; c.fillRect(3, -14, 2, 2);
+    if (w.swimmer) {
+      c.fillStyle = '#72e8f5'; c.fillRect(1, -15, 6, 3);
+      c.fillStyle = '#d6fcff'; c.fillRect(3, -15, 2, 2);
+    }
     c.fillStyle = w.state === 'blocker' ? '#da9abb' : '#a48be2'; c.fillRect(-4, -9, 8, 6);
     c.fillStyle = '#f3d3bd';
     if (w.state === 'blocker') { c.fillRect(-11, -9, 7, 3); c.fillRect(4, -9, 7, 3); }
+    else if (w.state === 'swim') { c.fillRect(3, -8 - frame * 4, 9, 3); }
     else if (working || w.state === 'climb') { c.fillRect(4, -10 - frame * 3, 6, 3); }
     else c.fillRect(frame ? -5 : 3, -7, 3, 4);
     c.fillStyle = '#d1c0f2'; c.fillRect(-4, -3, 3, 3); c.fillRect(1, -3, 3, 3);

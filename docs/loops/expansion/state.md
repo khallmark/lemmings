@@ -1,8 +1,8 @@
 # Expansion state
 
-Iteration: 48 / 100
+Iteration: 60 / 100
 
-Last improvement: Explosions combine a short noise burst with a low resonant thump
+Last improvement: Swimmers wear goggles and animate a swimming stroke
 
 Verification: ℹ tests 46; ℹ pass 46; ℹ fail 0
 

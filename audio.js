@@ -37,6 +37,24 @@ export class Soundscape {
   }
 
   effect(type, detail = {}) {
+    if (type === 'defeat') {
+      [60, 58, 55, 48].forEach((note, i) => this.note(note, this.context.currentTime + i * .15, .3, .055, 'sine', this.effects)); return;
+    }
+    if (type === 'won') {
+      [60, 64, 67, 72, 79].forEach((note, i) => this.note(note, this.context.currentTime + i * .12, .4, .08, 'triangle', this.effects)); return;
+    }
+    if (type === 'warning') { this.note(88, this.context.currentTime, .06, .04, 'square', this.effects); return; }
+    if (type === 'crystal') {
+      [79, 83, 86, 91].forEach((note, i) => this.note(note, this.context.currentTime + i * .07, .3, .05, 'sine', this.effects)); return;
+    }
+    if (type === 'switch') {
+      this.note(48, this.context.currentTime, .12, .06, 'square', this.effects);
+      this.note(67, this.context.currentTime + .1, .2, .04, 'triangle', this.effects); return;
+    }
+    if (type === 'portal') {
+      [60, 67, 74, 81].forEach((note, i) => this.note(note, this.context.currentTime + i * .035, .18, .045, 'sine', this.effects));
+      return;
+    }
     if (type === 'boom') {
       this.noise(this.context.currentTime, .45, .17, this.effects);
       this.note(29, this.context.currentTime, .55, .14, 'sine', this.effects); return;
@@ -55,11 +73,11 @@ export class Soundscape {
         walker: 60, turner: 62, runner: 76, platformer: 67, jumper: 81, swimmer: 69, stoner: 45, shield: 84 };
       this.note(notes[detail.skill] || 60, this.context.currentTime, .13, .06, 'triangle', this.effects); return;
     }
-    const frequencies = { assign: 420, save: 740, lost: 160, boom: 70, won: 880 };
+    const frequencies = { spring: 180, lost: 160 };
     const now = this.context.currentTime, osc = this.context.createOscillator(), gain = this.context.createGain();
-    osc.type = type === 'boom' ? 'sawtooth' : 'triangle';
+    osc.type = type === 'spring' ? 'sine' : 'triangle';
     osc.frequency.setValueAtTime(frequencies[type] || 330, now);
-    osc.frequency.exponentialRampToValueAtTime(type === 'save' ? 1100 : 90, now + .18);
+    osc.frequency.exponentialRampToValueAtTime(type === 'spring' ? 950 : 90, now + .18);
     gain.gain.setValueAtTime(.045, now); gain.gain.exponentialRampToValueAtTime(.001, now + .22);
     osc.connect(gain); gain.connect(this.effects); osc.start(); osc.stop(now + .23);
     osc.onended = () => { osc.disconnect(); gain.disconnect(); };

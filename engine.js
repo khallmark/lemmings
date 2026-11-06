@@ -108,6 +108,10 @@ export class Game {
   update() {
     if (this.status !== 'running') return;
     this.tick++;
+    const remaining = this.level.time - this.tick / TICK_RATE;
+    if (remaining > 0 && remaining <= 30 && Number.isInteger(remaining) && (remaining % 5 === 0 || remaining <= 5)) {
+      this.events.push({ type: 'warning', remaining });
+    }
     if (!this.nuking && this.released < this.level.total && --this.spawnIn <= 0) {
       this.lemmings.push({ id: this.released++, x: this.level.spawn[0], y: this.level.spawn[1],
         dir: this.level.direction || 1, state: 'fall', alive: true, fall: 0, vy: 0,

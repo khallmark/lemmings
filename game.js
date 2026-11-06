@@ -262,13 +262,16 @@ function frame(now) {
   const delta = lastTime ? Math.min(100, now - lastTime) : 0;
   lastTime = now;
   const active = game.status === 'running' && !paused && !modal.open && !document.hidden;
-  score?.update(active && sound, levelIndex);
+  score?.update(active && sound && $('music-enabled').checked, levelIndex);
   if (active) {
     accumulator += delta * speed;
     while (accumulator >= 1000 / TICK_RATE) { game.update(); accumulator -= 1000 / TICK_RATE; }
   } else accumulator = 0;
   for (const event of game.events.splice(0)) {
-    renderer.effect(event); tone(event.type, event);
+    renderer.effect(event); tone(event.type === 'lost' && event.x === undefined ? 'defeat' : event.type, event);
+    if (event.type === 'switch') announce('Pressure switch activated. A gate is now open.');
+    if (event.type === 'warning') announce(`${event.remaining} seconds remaining.`);
+    if (event.type === 'crystal') announce(`Crystal collected. ${game.crystals.size} found.${game.exitOpen ? ' Home is unlocked.' : ' Find the remaining crystals.'}`);
     if (event.type === 'save') announce(`${game.saved} of ${game.level.need} needed rescued.`);
   }
   if (['won', 'lost'].includes(game.status) && !resultShown) results();
