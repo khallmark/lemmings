@@ -3,6 +3,7 @@ export const TRACKS = [
   { name: 'Mosslight waltz', root: 60, tempo: .3, melody: [0, 4, 7, 12, 9, 7, 4, 2, 0, 4, 7, 14, 12, 7, 4, 2] },
   { name: 'Tidal lanterns', root: 62, tempo: .28, melody: [0, 3, 7, 10, 7, 3, 5, 7, 12, 10, 7, 5, 3, 7, 5, 2] },
   { name: 'Homeward march', root: 65, tempo: .22, melody: [0, 7, 4, 7, 9, 12, 9, 7, 5, 9, 12, 14, 12, 9, 7, 4] },
+  { name: 'Prism nocturne', root: 57, tempo: .26, melody: [12, 7, 10, 3, 7, 0, 3, 5, 10, 7, 14, 12, 10, 5, 3, 7] },
 ];
 
 export class Soundscape {

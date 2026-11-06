@@ -1,11 +1,11 @@
 # Expansion state
 
-Iteration: 96 / 100
+Iteration: 100 / 100
 
-Last improvement: Held entrances show closed doors and a pause emblem in the world
+Last improvement: A Little Sacrifice turns two pioneers into a bridge for the final ten survivors
 
-Verification: ℹ tests 47; ℹ pass 47; ℹ fail 0
+Verification: ℹ tests 52; ℹ pass 52; ℹ fail 0
 
-Decision: continue
+Decision: verify-delivery
 
 See prompt.md for acceptance criteria and iterations.jsonl for the full evidence trail.

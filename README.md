@@ -1,8 +1,11 @@
 # Lemmings
 
-An original, browser-based rescue puzzle game inspired by Lemmings. Eight levels
-take you from your first tunnel to a combined digging, bridging, and climbing
-challenge. No build step, backend, images, or JavaScript dependencies required.
+An original, browser-based rescue puzzle game inspired by Lemmings: **28 authored
+puzzles, 16 skills, four original synthesized music themes**, and a campaign of
+tunnels, bridges, water, wind, portals, switches, springs, timed traps, and crystals.
+No build step, backend, images, or JavaScript dependencies required.
+
+**[Play on GitHub Pages](https://khallmark.github.io/lemmings/)**
 
 ## Play the game
 
@@ -18,12 +21,19 @@ offline. The game's artwork and sound effects are generated locally.
 
 - Select a skill, then click a lemming. You can assign skills while paused.
 - **1–8:** Climber, Floater, Bomber, Blocker, Builder, Basher, Miner, Digger.
-- **Space:** pause/resume when the game field is focused. **F:** 1×/3× speed.
+- **Shift+1–8:** Walker, Turner, Runner, Platformer, Jumper, Swimmer, Stoner, Shield.
+- **Space:** pause/resume when the game field is focused. **Escape:** pause.
+- **F:** cycle 1×, 3×, and 0.5× speed. **Period:** pause and advance one tick.
+- **H:** contextual help. **L:** campaign browser with chapter and skill search.
 - **R:** restart with confirmation. The release slider controls spawn frequency.
 - **Keyboard targeting:** focus the field, use left/right arrows to cycle living
   lemmings, then Enter to assign the selected skill.
 - On narrow screens, swipe the playfield horizontally. Controls stay on screen.
 - Sound starts muted. Enable it with the Sound button.
+- **Hold entrance:** stop new releases while the crowd and clock keep moving.
+- **Target direction:** select only left- or right-facing lemmings in a crowd.
+- **Zoom / Follow:** magnify the field or track a keyboard-selected survivor.
+- **Sound studio:** choose a soundtrack, mute only music, or mix music/effects.
 
 Walkers turn at walls and blockers. Climbers and floaters keep their abilities.
 Builders place 16 steps; bashers, miners, and diggers remove earth in their own
@@ -31,11 +41,25 @@ directions. Falls greater than 100 world pixels are fatal without a floater.
 Silver steel cannot be destroyed. Bombers explode after three game seconds.
 Nuke stops spawning and explodes the remaining walkers; rescued walkers stay safe.
 
+Walker cancels ground jobs and frees blockers. Runner doubles walking only;
+Platformer lays flat bridges. Jumper and springs clear small gaps. Swimmer handles
+water, while Shield grants six seconds of hazard protection. Stoner sacrifices a
+lemming to create terrain. Wind carries open parachutes. Numbered switches open
+matching gates, portals transfer lemmings, and crystal counters explain exit locks.
+Timed traps show the remaining safe/danger phase; builders show their stock.
+
 Each level has a rescue target, time limit, and finite skill inventory. The result
 appears when everyone has exited or died, or time expires. Every level is available
 from Level select. Best successful rescue counts persist in localStorage on the
 same browser and origin. If storage is unavailable, the game still runs without
 persistent records. Switching browser tabs automatically pauses the game.
+
+Perfect rescues earn stars. Fastest wins, fewest skills used in a win, and best
+crystal collections are tracked independently. Share a puzzle with **Copy level
+link** (`?level=1` through `?level=28`). Returning to the home URL reopens your last
+expedition at its briefing, not midway through an attempt. Audio preferences are
+saved, but sound always requires an explicit click. Reduced-motion preferences
+disable decorative animation and particles without hiding hazard timing.
 
 ## Development and tests
 
@@ -48,9 +72,17 @@ npm test
 - `engine.js` — deterministic 30 Hz simulation and pixel terrain collision map.
 - `levels.js` — original level layouts, inventories, goals, and skill descriptions.
 - `renderer.js` — Canvas pixel art, terrain caching, characters, and particles.
-- `game.js` — browser input, menus, playback, audio, and saved records.
-- `game.test.js` — complete legal-input solutions for all eight levels, plus
+- `game.js` — browser input, menus, playback, audio orchestration, and saved records.
+- `audio.js` — original procedural melody, bass, percussion, and event effects.
+- `game.test.js` — complete legal-input solutions for all 28 levels, plus
   fall boundaries, steel, inventory, bombs, nuke, timeout, and reset checks.
+- `expansion.test.js` — expanded skills, environmental mechanics, entrance holds.
+
+GitHub Pages automatically publishes the repository root on `main`. The Game
+tests workflow runs on every push to `main` and on pull requests. Test locally
+before pushing; Pages and the test workflow run independently. The 100 sequential
+expansion passes and their executed checks are recorded in
+`docs/loops/expansion/iterations.jsonl`.
 
 This is an independent game with original levels and generated art, not a port of
 the commercial game's assets or original level collection.

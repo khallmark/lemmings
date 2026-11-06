@@ -59,6 +59,10 @@ const solutions = [
     if (w.id === 0 && w.state === 'walk' && w.x === 314 && g.skills.builder === 3) g.assign(0, 'builder');
     if (w.x === 680 && !w.shield) g.assign(w.id, 'shield');
   } },
+  g => { const w = g.lemmings.find(w => w.alive && w.state === 'walk' && w.x === 510); if (w && g.skills.basher === 2) g.assign(w.id, 'basher'); },
+  g => { for (const w of g.lemmings) if (w.alive) { if (!w.floater) g.assign(w.id, 'floater'); if (!w.swimmer) g.assign(w.id, 'swimmer'); } },
+  g => { for (const w of g.lemmings) if (w.alive) { if (!w.runner) g.assign(w.id, 'runner'); if (w.x >= 520 && w.x <= 524 && !w.shield) g.assign(w.id, 'shield'); } },
+  g => { for (const w of g.lemmings) if (w.alive && w.state === 'fall' && w.x >= 360 && w.x < 375 && w.y >= 312) g.assign(w.id, 'stoner'); },
 ];
 
 for (const [index, level] of LEVELS.entries()) {
@@ -78,6 +82,10 @@ test('doing nothing fails the first puzzle; a wall is not a passable decoration'
   const game = run(new Game(LEVELS[0]));
   assert.equal(game.status, 'lost');
   assert.equal(game.saved, 0);
+});
+
+test('encore puzzles require player intervention, not just waiting', () => {
+  for (const level of LEVELS.slice(24)) assert.equal(run(new Game(level)).status, 'lost', level.name);
 });
 
 function fixture(overrides = {}) {
