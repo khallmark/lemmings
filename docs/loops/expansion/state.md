@@ -1,8 +1,8 @@
 # Expansion state
 
-Iteration: 84 / 100
+Iteration: 96 / 100
 
-Last improvement: Expedition cards expose speed, efficiency, and collectible personal bests
+Last improvement: Held entrances show closed doors and a pause emblem in the world
 
 Verification: ℹ tests 47; ℹ pass 47; ℹ fail 0
 

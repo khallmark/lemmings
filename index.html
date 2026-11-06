@@ -44,6 +44,7 @@
             <p id="briefing-copy">They keep walking. You make the plan. Give your little friends the right skills and guide them safely home.</p>
             <small id="result-stats" hidden></small>
             <button class="primary" id="start">Let’s go! <span aria-hidden="true">▶</span></button>
+            <button id="replay" hidden>Replay for a better record ↻</button>
             <small id="briefing-foot">16 useful skills · A lot of little lives</small>
           </div>
         </div>
@@ -67,12 +68,13 @@
     <div class="field-notes"><div class="hint-mark" aria-hidden="true">✦</div><p id="hint"></p><span id="selection-note">Select a skill. Click a lemming.</span></div>
     <details class="studio"><summary>Sound studio</summary><div class="studio-controls">
       <label><input id="music-enabled" type="checkbox" checked> Play music</label>
+      <label>Soundtrack <select id="track"><option value="auto">Follow chapter</option></select></label>
       <label>Music volume <input id="music-volume" type="range" min="0" max="100" value="35"></label>
       <label>Effects volume <input id="effects-volume" type="range" min="0" max="100" value="60"></label>
       <span id="track-name">Original procedural soundtrack · Enable Sound to listen</span>
     </div></details>
     <p id="announcement" class="sr-only" role="status" aria-live="polite"></p>
-    <footer><span>Made for a little pause in your day.</span><div><span><kbd>1</kbd>–<kbd>8</kbd> skills <kbd>Space</kbd> pause</span><a href="playground.html">Original walker playground ↗</a></div></footer>
+    <footer><span>Made for a little pause in your day.</span><div><span><kbd>1</kbd>–<kbd>8</kbd> skills · Shift for more · <kbd>Esc</kbd> pause · <kbd>H</kbd> help · <kbd>L</kbd> levels</span><a href="playground.html">Original walker playground ↗</a></div></footer>
   </main>
 
   <dialog id="modal" aria-labelledby="modal-title"><div class="modal-top"><h2 id="modal-title"></h2><button id="close-modal" aria-label="Close dialog">×</button></div><div id="modal-content"></div></dialog>

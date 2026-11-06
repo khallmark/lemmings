@@ -41,6 +41,20 @@ function tone(type, detail) {
   if (sound && score) score.effect(type, detail);
 }
 
+TRACKS.forEach((track, i) => $('track').add(new Option(track.name, i)));
+try {
+  $('music-enabled').checked = localStorage.getItem('lemmings-music-enabled') !== 'false';
+  const track = localStorage.getItem('lemmings-track');
+  if (Array.from($('track').options).some(option => option.value === track)) $('track').value = track;
+} catch { /* Audio preferences are optional. */ }
+$('track').onchange = () => {
+  try { localStorage.setItem('lemmings-track', $('track').value); } catch { /* Storage is optional. */ }
+  updateUI();
+};
+$('music-enabled').onchange = () => {
+  try { localStorage.setItem('lemmings-music-enabled', String($('music-enabled').checked)); } catch { /* Storage is optional. */ }
+};
+
 SKILLS.forEach((skill, index) => {
   const button = document.createElement('button');
   button.className = 'skill'; button.dataset.skill = skill.id;
@@ -80,7 +94,6 @@ function loadLevel(index, first = false) {
   $('viewport').scrollLeft = 0;
   $('level-meta').textContent = `Level ${pad(index + 1)} / ${pad(LEVELS.length)} · ${game.level.theme}`;
   $('level-title').textContent = game.level.name;
-  $('track-name').textContent = `Original score: ${TRACKS[Math.floor(index / 8) % TRACKS.length].name}`;
   $('goal').textContent = `Save ${game.level.need} of ${game.level.total} lemmings`;
   $('saved-goal').textContent = `/ ${pad(game.level.need)} needed`;
   $('hint').textContent = game.level.hint;
@@ -88,6 +101,7 @@ function loadLevel(index, first = false) {
   $('release').value = 5; $('release-value').textContent = 5;
   $('briefing').hidden = false;
   $('result-stats').hidden = true;
+  $('replay').hidden = true;
   if (!first) {
     $('briefing-kicker').textContent = `Level ${pad(index + 1)} · ${game.level.difficulty}`;
     $('briefing-title').textContent = game.level.name;
@@ -99,6 +113,8 @@ function loadLevel(index, first = false) {
 }
 
 function updateUI() {
+  const track = $('track').value === 'auto' ? Math.floor(levelIndex / 8) % TRACKS.length : Number($('track').value);
+  $('track-name').textContent = `Original score: ${TRACKS[track].name}`;
   $('out').textContent = `${pad(game.released)} / ${pad(game.level.total)}`;
   $('saved').textContent = pad(game.saved);
   $('goal').textContent = game.saved >= game.level.need ? '✓ Goal met — rescue more for a perfect run!' : `Save ${game.level.need} of ${game.level.total} lemmings`;
@@ -214,6 +230,7 @@ function results() {
   const complete = won && LEVELS.every((level, i) => progress[i] >= level.need);
   $('briefing').hidden = false;
   $('result-stats').hidden = false;
+  $('replay').hidden = !won;
   $('result-stats').textContent = `Skills used: ${used}${won ? ` · Fewest in a win: ${records[levelIndex].skills}` : ''}`;
   if (game.level.crystals?.length) $('result-stats').textContent += ` · ◆ ${game.crystals.size}/${game.level.crystals.length}${game.crystals.size === game.level.crystals.length ? ' All crystals!' : ''}`;
   $('briefing-kicker').textContent = won ? complete ? 'Every expedition completed!' : game.saved === game.level.total ? '★ Perfect rescue — everyone survived!' : 'A little victory!' : 'There’s another way.';
@@ -225,7 +242,7 @@ function results() {
   $('start').focus({ preventScroll: true });
 }
 
-function targetable(w) { return w.alive && (!$('direction').value || Number($('direction').value) === 0 || w.dir === Number($('direction').value)); }
+function targetable(w) { return w.alive && (Number($('direction').value) === 0 || w.dir === Number($('direction').value)); }
 
 function nearest(x, y) {
   let best = null, distance = 24;
@@ -237,7 +254,7 @@ function nearest(x, y) {
 }
 
 function assign(id) {
-  if (id === null) return;
+  if (!game.lemmings.some(w => w.id === id && targetable(w))) return;
   if (game.assign(id, selected)) {
     announce(`${selected} assigned. ${game.skills[selected]} remaining.`);
     $('selection-note').textContent = `${selected[0].toUpperCase() + selected.slice(1)} assigned! ${game.skills[selected]} left.`;
@@ -249,8 +266,7 @@ function assign(id) {
 }
 
 canvas.addEventListener('pointermove', event => {
-  const rect = canvas.getBoundingClientRect();
-  pointer = { x: (event.clientX - rect.left) * WIDTH / rect.width, y: (event.clientY - rect.top) * HEIGHT / rect.height };
+  pointer = { x: event.clientX, y: event.clientY };
   keyboardTarget = null;
 });
 canvas.addEventListener('pointerleave', () => { pointer = null; hovered = null; });
@@ -268,9 +284,11 @@ canvas.addEventListener('keydown', event => {
     const index = current < 0 ? (direction > 0 ? 0 : alive.length - 1) : (current + direction + alive.length) % alive.length;
     const next = alive[index];
     keyboardTarget = next.id;
+    if (following !== null) following = next.id;
     const scale = canvas.clientWidth / WIDTH;
     $('viewport').scrollLeft = Math.max(0, next.x * scale - $('viewport').clientWidth / 2);
-    announce(`Lemming ${next.id + 1}, ${next.state}${next.climber ? ', climber' : ''}${next.floater ? ', floater' : ''}.`);
+    $('viewport').scrollTop = Math.max(0, next.y * scale - $('viewport').clientHeight / 2);
+    announce(`Lemming ${next.id + 1}, ${next.state}${['climber', 'floater', 'runner', 'swimmer', 'shield'].filter(s => next[s]).map(s => `, ${s}`).join('')}.`);
   }
   if (event.key === 'Enter') { event.preventDefault(); assign(keyboardTarget); }
 });
@@ -319,6 +337,7 @@ $('zoom').onclick = () => {
   updateUI();
 };
 $('restart').onclick = restart;
+$('replay').onclick = () => loadLevel(levelIndex);
 $('nuke').onclick = () => confirmAction('End this attempt?', 'Stop releasing lemmings and explode those still outside. Already rescued lemmings are safe. If you met the rescue goal, this still completes the level.', 'Nuke remaining', () => { game.nuke(); paused = false; updateUI(); });
 $('release').oninput = event => {
   game.releaseInterval = 85 - Number(event.target.value) * 8;
@@ -354,12 +373,17 @@ for (const id of ['music-volume', 'effects-volume']) {
   });
 }
 document.addEventListener('keydown', event => {
-  if (modal.open || event.repeat || event.ctrlKey || event.metaKey || event.altKey || event.target.matches('input, select, button, a')) return;
+  if (event.key === 'Escape' && !modal.open && game.status === 'running') {
+    paused = true; accumulator = 0; updateUI(); announce('Paused. Take your time.'); return;
+  }
+  if (modal.open || event.repeat || event.ctrlKey || event.metaKey || event.altKey || event.target.matches('input, select, a')) return;
   if (/^Digit[1-8]$/.test(event.code)) chooseSkill(SKILLS[Number(event.code.slice(-1)) - 1 + (event.shiftKey ? 8 : 0)].id);
-  if (event.code === 'Space') { event.preventDefault(); $('pause').click(); }
+  if (event.code === 'Space' && !event.target.matches('button')) { event.preventDefault(); $('pause').click(); }
   if (event.key.toLowerCase() === 'f') $('speed').click();
   if (event.key === '.') $('step').click();
   if (event.key.toLowerCase() === 'r') restart();
+  if (event.key.toLowerCase() === 'h') help();
+  if (event.key.toLowerCase() === 'l') levelMenu();
 });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && game.status === 'running') { paused = true; updateUI(); }
@@ -376,7 +400,7 @@ function frame(now) {
   const delta = lastTime ? Math.min(100, now - lastTime) : 0;
   lastTime = now;
   const active = game.status === 'running' && !paused && !modal.open && !document.hidden;
-  score?.update(active && sound && $('music-enabled').checked, levelIndex);
+  score?.update(active && sound && $('music-enabled').checked, $('track').value === 'auto' ? levelIndex : Number($('track').value) * 8);
   if (active) {
     accumulator += delta * speed;
     while (accumulator >= 1000 / TICK_RATE) { game.update(); accumulator -= 1000 / TICK_RATE; }
@@ -389,14 +413,16 @@ function frame(now) {
     if (event.type === 'save') announce(`${game.saved} of ${game.level.need} needed rescued.`);
   }
   if (['won', 'lost'].includes(game.status) && !resultShown) results();
-  hovered = pointer ? nearest(pointer.x, pointer.y) : keyboardTarget;
-  const target = game.lemmings.find(w => w.id === hovered && w.alive);
   const tracked = game.lemmings.find(w => w.id === following && w.alive);
   if (tracked) {
     const scale = canvas.clientWidth / WIDTH;
     $('viewport').scrollLeft = tracked.x * scale - $('viewport').clientWidth / 2;
     $('viewport').scrollTop = tracked.y * scale - $('viewport').clientHeight / 2;
   } else following = null;
+  const rect = canvas.getBoundingClientRect();
+  hovered = pointer ? nearest((pointer.x - rect.left) * WIDTH / rect.width, (pointer.y - rect.top) * HEIGHT / rect.height) : keyboardTarget;
+  const target = game.lemmings.find(w => w.id === hovered && targetable(w));
+  if (!target) hovered = null;
   $('target-status').textContent = target ? `#${target.id + 1} ${target.dir > 0 ? '→' : '←'} ${target.state}${['climber', 'floater', 'runner', 'swimmer', 'shield'].filter(s => target[s]).map(s => ` · ${s}`).join('')}` : 'Point at a lemming to inspect it.';
   renderer.draw(game, hovered, active);
   // DOM values only change at simulation cadence, not for every painted frame.

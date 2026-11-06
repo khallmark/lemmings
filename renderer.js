@@ -1,4 +1,4 @@
-import { WIDTH, HEIGHT } from './engine.js';
+import { WIDTH, HEIGHT, SAFE_FALL } from './engine.js';
 
 const noise = (x, y) => ((Math.imul(x + 19, 374761393) ^ Math.imul(y + 37, 668265263)) >>> 0) % 101;
 const palettes = [
@@ -122,9 +122,15 @@ export class Renderer {
       c.fillStyle = active ? '#8b384b' : '#363e50'; c.fillRect(x, y, width, height);
       c.fillStyle = active ? '#ffb06e' : '#8cacc0';
       for (let px = x; px < x + width; px += 8) c.fillRect(px, y + Math.sin((px + time) / 12) * 2, 6, 2);
-      if (period) { c.font = '9px monospace'; c.textAlign = 'center'; c.fillText(active ? 'DANGER' : 'SAFE', x + width / 2, y - 8); }
+      if (period) {
+        const phase = game.tick % period, left = active ? hazard[5] - phase : period - phase;
+        c.font = '9px monospace'; c.textAlign = 'center';
+        c.fillText(`${active ? 'DANGER' : 'SAFE'} ${Math.ceil(left / 30)}s`, x + width / 2, y - 12);
+        c.fillRect(x, y - 7, width * left / (active ? hazard[5] : period - hazard[5]), 3);
+      }
     }
-    this.entrance(game.level.spawn, game.released < game.level.total && !game.nuking);
+    this.entrance(game.level.spawn, game.released < game.level.total && !game.nuking && !game.releaseHeld,
+      game.releaseHeld && game.released < game.level.total && !game.nuking);
     this.exit(game.level.exit, time, game.exitOpen);
     for (const [i, [x, y]] of (game.level.crystals || []).entries()) if (!game.crystals.has(i)) {
       c.save(); c.translate(x, y + Math.sin(time / 12) * 2); c.rotate(Math.PI / 4);
@@ -140,6 +146,7 @@ export class Renderer {
       const open = game.openGates.has(i), [x, y, width, height] = gate.rect, [sx, sy] = gate.switch;
       c.fillStyle = open ? '#6ca982' : '#cfab69'; c.fillRect(sx - 10, sy - 5, 20, 5);
       c.font = '9px monospace'; c.textAlign = 'center'; c.fillText(`SWITCH ${i + 1}`, sx, sy - 15);
+      c.fillText(`GATE ${i + 1}${open ? ' ✓' : ''}`, x + width / 2, y - 9);
       c.strokeStyle = open ? '#6ca982' : '#cfab69'; c.lineWidth = 2; c.strokeRect(x, y, width, height);
       if (!open) for (let px = x; px < x + width; px += 6) c.fillRect(px, y, 3, height);
     }
@@ -164,7 +171,7 @@ export class Renderer {
     }
   }
 
-  entrance([x, y], open) {
+  entrance([x, y], open, held) {
     const c = this.ctx;
     c.fillStyle = '#383145'; c.fillRect(x - 24, y - 50, 48, 36);
     c.fillStyle = '#ad92b7'; c.fillRect(x - 28, y - 53, 56, 5); c.fillRect(x - 28, y - 18, 56, 5);
@@ -173,7 +180,8 @@ export class Renderer {
     c.fillStyle = open ? '#c1e88e' : '#937da0';
     c.fillRect(x - 5, y - 38, 10, 3); c.fillRect(x - 2, y - 35, 4, 7); c.fillRect(x - 5, y - 30, 10, 2);
     if (open) { c.fillStyle = '#7c6a88'; c.fillRect(x - 20, y - 13, 5, 14); c.fillRect(x + 15, y - 13, 5, 14); }
-    c.font = '9px monospace'; c.textAlign = 'center'; c.fillStyle = '#b2a1c5'; c.fillText('IN', x, y - 62);
+    if (held) { c.fillStyle = '#ffd39a'; c.fillRect(x - 6, y - 40, 4, 12); c.fillRect(x + 2, y - 40, 4, 12); }
+    c.font = '9px monospace'; c.textAlign = 'center'; c.fillStyle = '#b2a1c5'; c.fillText(held ? 'HELD' : 'IN', x, y - 62);
   }
 
   exit([x, y], time, open) {
@@ -201,6 +209,10 @@ export class Renderer {
       c.fillRect(-19, -12, 9, 2); c.fillRect(-15, -6, 6, 2);
     }
     if (selected) { c.strokeStyle = '#f3f6ba'; c.lineWidth = 1; c.strokeRect(-10, -22, 20, 25); }
+    if (w.state === 'fall' && !w.floater && w.fall > SAFE_FALL * .75) {
+      c.fillStyle = w.fall > SAFE_FALL ? '#ff8d91' : '#ffe2a2';
+      c.font = 'bold 14px monospace'; c.textAlign = 'center'; c.fillText('!', 0, -27);
+    }
     if (w.shield) {
       c.strokeStyle = w.shield < 45 ? '#ffbd79' : '#84ebf2'; c.lineWidth = 2;
       c.beginPath(); c.ellipse(0, -10, 14, 22, 0, 0, Math.PI * 2); c.stroke();
@@ -229,6 +241,11 @@ export class Renderer {
     if (working) {
       c.fillStyle = '#d7bc83'; c.fillRect(7, -10, 2, 11);
       c.fillStyle = '#cec8d9'; c.fillRect(4, -11, 9, 3);
+    }
+    if (w.state === 'builder' || w.state === 'platformer') {
+      c.fillStyle = '#41374f'; c.fillRect(-12, 5, 24, 3);
+      c.fillStyle = w.steps >= 13 ? '#ffbd79' : '#c5f394';
+      c.fillRect(-12, 5, 24 * (16 - w.steps) / 16, 3);
     }
     c.restore();
     if (w.bomb) { c.fillStyle = '#ffbfab'; c.textAlign = 'center'; c.font = 'bold 11px monospace'; c.fillText(Math.ceil(w.bomb / 30), x, y - 28); }
