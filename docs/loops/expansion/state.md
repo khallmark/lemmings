@@ -1,8 +1,8 @@
 # Expansion state
 
-Iteration: 36 / 100
+Iteration: 48 / 100
 
-Last improvement: Grand homecoming combines excavation, bridging, water, switches, crystals, and lava
+Last improvement: Explosions combine a short noise burst with a low resonant thump
 
 Verification: ℹ tests 46; ℹ pass 46; ℹ fail 0
 

@@ -80,7 +80,7 @@ export class Game {
       w.steps = 0;
     }
     this.skills[skill]--;
-    this.events.push({ type: 'assign', x: w.x, y: w.y });
+    this.events.push({ type: 'assign', skill, x: w.x, y: w.y });
     return true;
   }
 
@@ -112,6 +112,7 @@ export class Game {
       this.lemmings.push({ id: this.released++, x: this.level.spawn[0], y: this.level.spawn[1],
         dir: this.level.direction || 1, state: 'fall', alive: true, fall: 0, vy: 0,
         climber: false, floater: false, bomb: 0, actionTick: 0, steps: 0 });
+      this.events.push({ type: 'spawn', x: this.level.spawn[0], y: this.level.spawn[1] });
       this.spawnIn = this.releaseInterval;
     }
     for (const w of this.lemmings) if (w.alive) this.move(w);

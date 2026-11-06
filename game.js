@@ -1,6 +1,7 @@
 import { Game, WIDTH, HEIGHT, TICK_RATE } from './engine.js';
 import { LEVELS, SKILLS } from './levels.js';
 import { Renderer } from './renderer.js';
+import { Soundscape, TRACKS } from './audio.js';
 
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, '0');
@@ -9,7 +10,7 @@ const renderer = new Renderer(canvas);
 const modal = $('modal');
 let game, levelIndex = 0, selected = 'basher', paused = false, speed = 1;
 let hovered = null, pointer = null, keyboardTarget = null, lastTime = 0, accumulator = 0;
-let audio, sound = false, resultShown = false;
+let audio, score, sound = false, resultShown = false;
 let progress = {};
 try {
   const stored = JSON.parse(localStorage.getItem('lemmings-progress') || '{}');
@@ -22,16 +23,8 @@ try {
 
 function announce(message) { $('announcement').textContent = message; }
 
-function tone(type) {
-  if (!sound || !audio) return;
-  const frequencies = { assign: 420, save: 740, lost: 160, boom: 70, won: 880, lostGame: 130 };
-  const osc = audio.createOscillator(), gain = audio.createGain();
-  osc.type = type === 'boom' ? 'sawtooth' : 'triangle';
-  osc.frequency.setValueAtTime(frequencies[type] || 330, audio.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(type === 'save' ? 1100 : 90, audio.currentTime + .18);
-  gain.gain.setValueAtTime(.045, audio.currentTime);
-  gain.gain.exponentialRampToValueAtTime(.001, audio.currentTime + .22);
-  osc.connect(gain); gain.connect(audio.destination); osc.start(); osc.stop(audio.currentTime + .23);
+function tone(type, detail) {
+  if (sound && score) score.effect(type, detail);
 }
 
 SKILLS.forEach((skill, index) => {
@@ -65,6 +58,7 @@ function loadLevel(index, first = false) {
   $('viewport').scrollLeft = 0;
   $('level-meta').textContent = `Level ${pad(index + 1)} / ${pad(LEVELS.length)} · ${game.level.theme}`;
   $('level-title').textContent = game.level.name;
+  $('track-name').textContent = `Original score: ${TRACKS[Math.floor(index / 8) % TRACKS.length].name}`;
   $('goal').textContent = `Save ${game.level.need} of ${game.level.total} lemmings`;
   $('saved-goal').textContent = `/ ${pad(game.level.need)} needed`;
   $('hint').textContent = game.level.hint;
@@ -225,13 +219,27 @@ modal.addEventListener('click', event => { if (event.target === modal && (event.
 $('sound').onclick = async () => {
   try {
     audio ||= new AudioContext();
+    score ||= new Soundscape(audio);
+    score.volume = Number($('music-volume').value) / 100;
     await audio.resume(); sound = !sound;
+    score.effects.gain.value = sound ? Number($('effects-volume').value) / 100 : 0;
     $('sound').textContent = sound ? 'Sound on' : 'Sound off';
     $('sound').setAttribute('aria-pressed', String(sound));
     $('sound').setAttribute('aria-label', sound ? 'Turn sound off' : 'Turn sound on');
     tone('assign');
   } catch { announce('Sound is unavailable in this browser. The game still works.'); }
 };
+$('music-volume').oninput = event => { if (score) score.volume = Number(event.target.value) / 100; };
+$('effects-volume').oninput = event => { if (score && sound) score.effects.gain.value = Number(event.target.value) / 100; };
+for (const id of ['music-volume', 'effects-volume']) {
+  try {
+    const stored = localStorage.getItem(`lemmings-${id}`), value = Number(stored);
+    if (stored !== null && Number.isFinite(value) && value >= 0 && value <= 100) $(id).value = value;
+  } catch { /* Audio preferences are optional. */ }
+  $(id).addEventListener('input', () => {
+    try { localStorage.setItem(`lemmings-${id}`, $(id).value); } catch { /* Storage is optional. */ }
+  });
+}
 document.addEventListener('keydown', event => {
   if (modal.open || event.repeat || event.ctrlKey || event.metaKey || event.altKey || event.target.matches('input, button, a')) return;
   if (/^Digit[1-8]$/.test(event.code)) chooseSkill(SKILLS[Number(event.code.slice(-1)) - 1 + (event.shiftKey ? 8 : 0)].id);
@@ -241,6 +249,12 @@ document.addEventListener('keydown', event => {
 });
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && game.status === 'running') { paused = true; updateUI(); }
+  if (audio) {
+    if (document.hidden) {
+      score.music.gain.value = 0;
+      audio.suspend().catch(() => {});
+    } else if (sound) audio.resume().catch(() => announce('Tap Sound to resume audio.'));
+  }
   accumulator = 0; lastTime = 0;
 });
 
@@ -248,12 +262,13 @@ function frame(now) {
   const delta = lastTime ? Math.min(100, now - lastTime) : 0;
   lastTime = now;
   const active = game.status === 'running' && !paused && !modal.open && !document.hidden;
+  score?.update(active && sound, levelIndex);
   if (active) {
     accumulator += delta * speed;
     while (accumulator >= 1000 / TICK_RATE) { game.update(); accumulator -= 1000 / TICK_RATE; }
   } else accumulator = 0;
   for (const event of game.events.splice(0)) {
-    renderer.effect(event); tone(event.type);
+    renderer.effect(event); tone(event.type, event);
     if (event.type === 'save') announce(`${game.saved} of ${game.level.need} needed rescued.`);
   }
   if (['won', 'lost'].includes(game.status) && !resultShown) results();
