@@ -1,8 +1,8 @@
 # Expansion state
 
-Iteration: 72 / 100
+Iteration: 84 / 100
 
-Last improvement: Contextual field guide explains only this level’s skills and mechanisms
+Last improvement: Expedition cards expose speed, efficiency, and collectible personal bests
 
 Verification: ℹ tests 47; ℹ pass 47; ℹ fail 0
 

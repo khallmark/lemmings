@@ -48,6 +48,7 @@ h1 { margin: 0; font: 600 clamp(23px, 3vw, 32px)/1.2 'Space Grotesk', sans-serif
 .briefing-card #briefing-kicker { color: var(--lime); font-size: 11px; margin: 12px 0 8px; }
 .briefing-card h2 { font: 600 28px/1.15 'Space Grotesk', sans-serif; letter-spacing: -.8px; margin: 0; }
 .briefing-card small { display: block; font-size: 10px; color: #aaa0bd; margin-top: 16px; }
+.briefing-card #result-stats { margin: -6px 0 16px; color: #d4c8e5; }
 .primary { background: var(--lime); border-color: var(--lime); color: #2e3d27; padding: 11px 27px; box-shadow: 0 3px 0 #7fa55a; font-size: 14px; }
 .primary:hover { background: #d9ffb3; border-color: #d9ffb3; }
 .primary span { font-size: 10px; margin-left: 17px; }
@@ -92,6 +93,9 @@ dialog::backdrop { background: #1c172dab; backdrop-filter: blur(4px); }
 .modal-top h2 { font: 600 25px 'Space Grotesk', sans-serif; margin: 0; }
 .modal-top button { border: 0; font-size: 25px; line-height: 1; padding: 4px 8px; }
 .level-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.menu-tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 18px; }
+.menu-tools label { display: flex; gap: 8px; align-items: center; font-size: 12px; }
+.menu-tools select, .menu-tools input { max-width: 100%; font: inherit; padding: 8px; border: 1px solid var(--line); border-radius: 5px; color: var(--ink); background: white; }
 .level-card { text-align: left; padding: 15px; background: #ebe5f3; }
 .level-card small { display: block; color: var(--muted); margin: 5px 0; font-weight: 400; }
 .level-card .best { color: #507439; font-size: 11px; }

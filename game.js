@@ -22,6 +22,19 @@ try {
   }
 } catch { /* Private browsing may disable storage. Playing still works. */ }
 
+const records = {};
+try {
+  const stored = JSON.parse(localStorage.getItem('lemmings-records') || '{}');
+  LEVELS.forEach((level, i) => {
+    const ticks = stored?.[i]?.ticks;
+    if (Number.isInteger(ticks) && ticks > 0 && ticks <= level.time * TICK_RATE) records[i] = { ticks };
+    const skills = stored?.[i]?.skills;
+    if (records[i] && Number.isInteger(skills) && skills >= 0 && skills <= Object.values(level.skills).reduce((a, b) => a + b, 0)) records[i].skills = skills;
+    const gems = stored?.[i]?.gems;
+    if (records[i] && Number.isInteger(gems) && gems >= 0 && gems <= (level.crystals?.length || 0)) records[i].gems = gems;
+  });
+} catch { /* Records are optional. */ }
+
 function announce(message) { $('announcement').textContent = message; }
 
 function tone(type, detail) {
@@ -50,6 +63,11 @@ function chooseSkill(id) {
 
 function loadLevel(index, first = false) {
   levelIndex = index;
+  const url = new URL(location.href);
+  url.searchParams.set('level', index + 1);
+  history.replaceState(null, '', url);
+  try { localStorage.setItem('lemmings-last-level', String(index)); } catch { /* Returning to an expedition is optional. */ }
+  $('share').textContent = 'Copy level link';
   game = new Game(LEVELS[index]);
   $('skills').style.setProperty('--skill-columns', Math.min(8, Object.keys(game.skills).length));
   paused = false; speed = 1; resultShown = false; hovered = null; keyboardTarget = null; pointer = null;
@@ -69,6 +87,7 @@ function loadLevel(index, first = false) {
   $('selection-note').textContent = 'Select a skill. Click a lemming.';
   $('release').value = 5; $('release-value').textContent = 5;
   $('briefing').hidden = false;
+  $('result-stats').hidden = true;
   if (!first) {
     $('briefing-kicker').textContent = `Level ${pad(index + 1)} · ${game.level.difficulty}`;
     $('briefing-title').textContent = game.level.name;
@@ -124,7 +143,25 @@ function openModal(title, html) {
 }
 
 function levelMenu() {
-  openModal('A little adventure awaits', `<p class="dialog-copy">Pick an expedition. Every level is open to explore. Your best rescues are saved on this browser.</p><div class="level-list">${LEVELS.map((level, i) => `<button class="level-card" data-level="${i}"><small>${pad(i + 1)} · ${level.difficulty}</small>${level.name}<small>Save ${level.need} of ${level.total}</small><span class="best">${progress[i] === undefined ? 'Not completed yet' : `✓ Best: ${progress[i]} rescued`}</span></button>`).join('')}</div>`);
+  const completed = LEVELS.filter((level, i) => progress[i] >= level.need).length;
+  const perfect = LEVELS.filter((level, i) => progress[i] === level.total).length;
+  const next = LEVELS.findIndex((level, i) => !(progress[i] >= level.need));
+  openModal('A little adventure awaits', `<p class="dialog-copy"><strong>${completed}/${LEVELS.length} completed · ★ ${perfect} perfect rescues</strong><br>Every level is open to explore. Your best rescues are saved on this browser.</p>
+    <div class="menu-tools"><label>Chapter <select id="chapter"><option value="all">All expeditions</option><option value="0">1 · The old paths</option><option value="1">2 · New horizons</option><option value="2">3 · Crystal frontiers</option></select></label><label>Search <input id="level-search" type="search" placeholder="Name or skill"></label></div>
+    <div class="menu-tools"><label><input id="unfinished" type="checkbox"> Unfinished only</label>${next < 0 ? '' : `<button data-level="${next}">Continue campaign → ${pad(next + 1)}</button>`}</div>
+    <p id="no-levels" class="dialog-copy" hidden>No expeditions match. Try another chapter or search.</p>
+    <div class="level-list">${LEVELS.map((level, i) => `<button class="level-card" data-level="${i}"><small>${pad(i + 1)} · ${level.difficulty}</small>${level.name}<small>Save ${level.need} of ${level.total}</small><span class="best">${progress[i] === level.total ? '★ Perfect rescue!' : progress[i] === undefined ? 'Not completed yet' : `✓ Best: ${progress[i]} rescued`}</span>${records[i] ? `<small>Fastest ${(records[i].ticks / TICK_RATE).toFixed(1)}s${records[i].skills === undefined ? '' : ` · Fewest skills ${records[i].skills}`}${level.crystals?.length ? ` · ◆ ${records[i].gems || 0}/${level.crystals.length}` : ''}</small>` : ''}</button>`).join('')}</div>`);
+  const filterLevels = () => {
+    for (const card of $('modal-content').querySelectorAll('.level-card')) {
+      const index = Number(card.dataset.level), level = LEVELS[index];
+      const text = `${level.name} ${level.theme} ${Object.keys(level.skills).join(' ')}`.toLowerCase();
+      card.hidden = ($('chapter').value !== 'all' && Math.floor(index / 8) !== Number($('chapter').value)) || !text.includes($('level-search').value.trim().toLowerCase()) || ($('unfinished').checked && progress[index] >= level.need);
+    }
+    $('no-levels').hidden = !!$('modal-content').querySelector('.level-card:not([hidden])');
+  };
+  $('chapter').onchange = filterLevels;
+  $('level-search').oninput = filterLevels;
+  $('unfinished').onchange = filterLevels;
   $('modal-content').querySelectorAll('[data-level]').forEach(button => button.addEventListener('click', () => {
     const index = Number(button.dataset.level);
     modal.close();
@@ -167,16 +204,22 @@ function results() {
   $('viewport').scrollTop = 0; $('viewport').scrollLeft = 0;
   paused = false;
   const won = game.status === 'won';
+  const used = Object.entries(game.level.skills).reduce((sum, [id, count]) => sum + count - game.skills[id], 0);
   if (won) {
     progress[levelIndex] = Math.max(progress[levelIndex] || 0, game.saved);
+    records[levelIndex] = { ticks: Math.min(records[levelIndex]?.ticks ?? Infinity, game.tick), skills: Math.min(records[levelIndex]?.skills ?? Infinity, used), gems: Math.max(records[levelIndex]?.gems || 0, game.crystals.size) };
+    try { localStorage.setItem('lemmings-records', JSON.stringify(records)); } catch { /* Records are optional. */ }
     try { localStorage.setItem('lemmings-progress', JSON.stringify(progress)); } catch { /* Storage is optional. */ }
   }
   const complete = won && LEVELS.every((level, i) => progress[i] >= level.need);
   $('briefing').hidden = false;
-  $('briefing-kicker').textContent = won ? complete ? 'Every expedition completed!' : 'A little victory!' : 'There’s another way.';
+  $('result-stats').hidden = false;
+  $('result-stats').textContent = `Skills used: ${used}${won ? ` · Fewest in a win: ${records[levelIndex].skills}` : ''}`;
+  if (game.level.crystals?.length) $('result-stats').textContent += ` · ◆ ${game.crystals.size}/${game.level.crystals.length}${game.crystals.size === game.level.crystals.length ? ' All crystals!' : ''}`;
+  $('briefing-kicker').textContent = won ? complete ? 'Every expedition completed!' : game.saved === game.level.total ? '★ Perfect rescue — everyone survived!' : 'A little victory!' : 'There’s another way.';
   $('briefing-title').textContent = won ? complete ? 'You brought them home.' : 'Home, sweet home.' : 'Let’s try a new plan.';
   $('briefing-copy').textContent = `${game.saved} of ${game.level.total} lemmings rescued. ${won ? 'Your little friends thank you.' : `You needed ${game.level.need}. ${game.tick >= game.level.time * TICK_RATE ? 'Time ran out.' : 'Try pausing to plan your next move.'}`}`;
-  $('briefing-foot').textContent = won ? 'Best result saved on this browser. Replay any level from Level select.' : game.level.hint;
+  $('briefing-foot').textContent = won ? `Time: ${(game.tick / TICK_RATE).toFixed(1)}s · Fastest win: ${(records[levelIndex].ticks / TICK_RATE).toFixed(1)}s` : game.level.hint;
   $('start').textContent = won ? levelIndex < LEVELS.length - 1 ? 'Next expedition ▶' : 'Choose an expedition ▦' : 'Try again ↻';
   announce(`${won ? 'Level complete.' : 'Level failed.'} ${game.saved} rescued.`);
   $('start').focus({ preventScroll: true });
@@ -246,6 +289,10 @@ $('step').onclick = () => {
 $('speed').onclick = () => { speed = speed === 1 ? 3 : speed === 3 ? .5 : 1; updateUI(); };
 $('hold').onclick = () => { game.releaseHeld = !game.releaseHeld; updateUI(); };
 $('direction').onchange = () => { keyboardTarget = null; hovered = null; };
+$('share').onclick = async () => {
+  try { await navigator.clipboard.writeText(location.href); announce('Level link copied.'); $('share').textContent = 'Link copied ✓'; }
+  catch { announce('Copy the address bar to share this level.'); $('share').textContent = 'Copy address bar'; }
+};
 $('fullscreen').hidden = !document.fullscreenEnabled;
 $('fullscreen').onclick = async () => {
   try {
@@ -357,5 +404,12 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
-loadLevel(0, true);
+const linkedLevel = Number(new URL(location.href).searchParams.get('level')) - 1;
+let lastLevel = 0;
+try {
+  const stored = Number(localStorage.getItem('lemmings-last-level'));
+  if (Number.isInteger(stored) && LEVELS[stored]) lastLevel = stored;
+} catch { /* Storage is optional. */ }
+const initialLevel = Number.isInteger(linkedLevel) && LEVELS[linkedLevel] ? linkedLevel : lastLevel;
+loadLevel(initialLevel, initialLevel === 0);
 requestAnimationFrame(frame);
