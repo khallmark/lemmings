@@ -84,4 +84,28 @@ export const LEVELS = [
     terrain: [[30, 300, 330, 140], [425, 300, 505, 140], [330, 268, 135, 6, 2]],
     hazards: [[360, 420, 65, 20]],
   },
+  {
+    name: 'A dip in the moonpool', theme: 'Tidal caverns', difficulty: 'Easy',
+    hint: 'Blue water is deadly without Swimmer. Train every lemming before the shore. The crystal above the water unlocks home.',
+    total: 8, need: 6, time: 120, spawn: [110, 275], exit: [847, 300],
+    skills: { swimmer: 8, blocker: 2, walker: 2 },
+    terrain: [[30, 300, 330, 140], [550, 300, 380, 140]],
+    water: [[360, 300, 190, 140]], crystals: [[450, 290]], requiredCrystals: 1,
+  },
+  {
+    name: 'A hop, skip, and spring', theme: 'Bouncy grotto', difficulty: 'Tricky',
+    hint: 'Jump each lemming just before the first gap. The golden spring handles the second. Pause and use arrow keys to pick the next jumper.',
+    total: 8, need: 6, time: 120, spawn: [110, 275], exit: [847, 300],
+    skills: { jumper: 8, blocker: 2, walker: 2 },
+    terrain: [[30, 300, 330, 140], [410, 300, 190, 140], [645, 300, 285, 140]],
+    springs: [[580, 300]], hazards: [[360, 420, 50, 20], [600, 420, 45, 20]],
+  },
+  {
+    name: 'Six seconds of courage', theme: 'Ember crossing', difficulty: 'Tricky',
+    hint: 'Shield lasts six seconds. Assign near the red lava, not at the entrance. The shrinking ring shows how much protection remains.',
+    total: 8, need: 6, time: 120, spawn: [110, 275], exit: [847, 300],
+    skills: { shield: 8, runner: 8, blocker: 2, walker: 2 },
+    terrain: [[30, 300, 900, 140]], hazards: [[350, 299, 110, 141]],
+    crystals: [[400, 286]], requiredCrystals: 1,
+  },
 ];

@@ -7,6 +7,8 @@ export const SAFE_FALL = 100;
 export class Game {
   constructor(level) {
     this.level = level;
+    this.openGates = new Set();
+    this.crystals = new Set();
     this.terrain = new Uint8Array(WIDTH * HEIGHT);
     this.revision = 0;
     for (const [x, y, w, h, material = 1] of level.terrain) this.paint(x, y, w, h, material);
@@ -25,6 +27,8 @@ export class Game {
 
   at(x, y) {
     x = Math.floor(x); y = Math.floor(y);
+    if ((this.level.gates || []).some((g, i) => !this.openGates.has(i) &&
+      x >= g.rect[0] && x < g.rect[0] + g.rect[2] && y >= g.rect[1] && y < g.rect[1] + g.rect[3])) return 2;
     return x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT ? 0 : this.terrain[y * WIDTH + x];
   }
 
@@ -119,15 +123,45 @@ export class Game {
     }
   }
 
+  hazardActive(hazard) {
+    return !hazard[4] || this.tick % hazard[4] < hazard[5];
+  }
+
+  get exitOpen() { return this.crystals.size >= (this.level.requiredCrystals || 0); }
+
   move(w) {
     if (w.bomb && --w.bomb === 0) { this.explode(w); return; }
     if (w.shield) w.shield--;
     if (w.x < 3 || w.x >= WIDTH - 3 || w.y >= HEIGHT ||
-        (!w.shield && (this.level.hazards || []).some(([x, y, width, height]) => w.x >= x && w.x < x + width && w.y >= y && w.y < y + height))) {
+        (!w.shield && (this.level.hazards || []).some(h => this.hazardActive(h) && w.x >= h[0] && w.x < h[0] + h[2] && w.y >= h[1] && w.y < h[1] + h[3]))) {
       this.finish(w); return;
     }
+    (this.level.crystals || []).forEach(([x, y], i) => {
+      if (!this.crystals.has(i) && Math.hypot(w.x - x, w.y - 10 - y) < 16) {
+        this.crystals.add(i); this.events.push({ type: 'crystal', x, y });
+      }
+    });
     const [ex, ey] = this.level.exit;
-    if (Math.abs(w.x - ex) < 15 && Math.abs(w.y - ey) < 12) { this.finish(w, true); return; }
+    if (Math.abs(w.x - ex) < 15 && Math.abs(w.y - ey) < 12) {
+      if (this.exitOpen) { this.finish(w, true); return; }
+      w.dir = w.x < ex ? -1 : 1;
+    }
+
+    (this.level.gates || []).forEach((gate, i) => {
+      if (!this.openGates.has(i) && Math.abs(w.x - gate.switch[0]) < 10 && Math.abs(w.y - gate.switch[1]) < 12) {
+        this.openGates.add(i); this.revision++;
+        this.events.push({ type: 'switch', x: gate.switch[0], y: gate.switch[1] });
+      }
+    });
+
+    if (w.portalCooldown) w.portalCooldown--;
+    else {
+      const portal = (this.level.portals || []).find(p => Math.abs(w.x - p.from[0]) < 10 && Math.abs(w.y - p.from[1]) < 12);
+      if (portal) {
+        [w.x, w.y] = portal.to; w.fall = 0; w.vy = 0; w.state = 'fall'; w.portalCooldown = 30;
+        this.events.push({ type: 'portal', x: w.x, y: w.y }); return;
+      }
+    }
 
     const water = (this.level.water || []).find(([x, y, width, height]) =>
       w.x >= x && w.x < x + width && w.y >= y && w.y < y + height);
@@ -139,6 +173,11 @@ export class Game {
       return;
     }
     if (w.state === 'swim') w.state = 'walk';
+
+    if (w.state === 'walk' && this.at(w.x, w.y) && (this.level.springs || []).some(([x, y]) => Math.abs(w.x - x) < 5 && Math.abs(w.y - y) < 5)) {
+      w.state = 'jump'; w.vy = -5; w.fall = 0;
+      this.events.push({ type: 'spring', x: w.x, y: w.y });
+    }
 
     if (w.state === 'jump') {
       w.vy += 0.25;
@@ -163,6 +202,8 @@ export class Game {
 
     if (!this.at(w.x, w.y)) {
       w.state = 'fall';
+      const wind = (this.level.wind || []).find(([x, y, width, height]) => w.x >= x && w.x < x + width && w.y >= y && w.y < y + height);
+      if (wind && w.floater && !this.at(w.x + wind[4], w.y - 8) && !this.at(w.x + wind[4], w.y)) w.x += wind[4];
       w.vy = Math.min(w.vy + 0.35, w.floater && w.fall > 20 ? 1.2 : 5);
       const distance = Math.max(1, Math.floor(w.vy));
       for (let i = 0; i < distance; i++) {

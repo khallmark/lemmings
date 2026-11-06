@@ -35,6 +35,9 @@ const solutions = [
     }
   },
   g => { const w = g.lemmings[0]; if (w?.state === 'walk' && w.x === 346 && g.skills.platformer === 8) g.assign(w.id, 'platformer'); },
+  g => { for (const w of g.lemmings) if (w.alive && !w.swimmer) g.assign(w.id, 'swimmer'); },
+  g => { for (const w of g.lemmings) if (w.alive && w.state === 'walk' && w.x === 345) g.assign(w.id, 'jumper'); },
+  g => { for (const w of g.lemmings) if (w.alive && w.x === 330 && !w.shield) g.assign(w.id, 'shield'); },
 ];
 
 for (const [index, level] of LEVELS.entries()) {

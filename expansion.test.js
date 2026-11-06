@@ -89,3 +89,57 @@ test('Shield survives a short lava crossing but expires in a long one', () => {
     ticks(g, 800); assert.equal(g.saved, width === 80 ? 1 : 0);
   }
 });
+
+test('Portal transfers a lemming over an impossible void to the exit', () => {
+  const g = world({ terrain: [[0, 300, 180, 140], [740, 300, 220, 140]],
+    portals: [{ from: [150, 300], to: [750, 300] }] });
+  ticks(g, 100);
+  assert.equal(g.saved, 1);
+  assert.ok(g.events.some(e => e.type === 'portal'));
+});
+
+test('Pressure switch opens its steel gate only when reached', () => {
+  for (const y of [200, 300]) {
+    const g = world({ gates: [{ rect: [300, 200, 20, 100], switch: [140, y] }] });
+    ticks(g, 800);
+    assert.equal(g.saved, y === 300 ? 1 : 0);
+    assert.equal(g.openGates.has(0), y === 300);
+  }
+});
+
+test('Spring pads launch the crowd without spending Jumper inventory', () => {
+  const g = world({ terrain: [[0, 300, 170, 140], [220, 300, 740, 140]], springs: [[150, 300]] });
+  ticks(g, 800); assert.equal(g.saved, 1);
+  assert.ok(g.events.some(e => e.type === 'spring'));
+});
+
+test('Wind drifts parachutes but leaves ordinary falling lemmings alone', () => {
+  for (const floating of [false, true]) {
+    const g = world({ spawn: [100, 30], wind: [[0, 0, 960, 300, -1]], skills: { floater: 1 } });
+    if (floating) g.assign(0, 'floater');
+    const x = g.lemmings[0].x;
+    ticks(g, 10); assert.equal(g.lemmings[0].x, x - (floating ? 10 : 0));
+  }
+});
+
+test('Timed traps permit safe-phase crossings and kill during active phases', () => {
+  for (const activeTicks of [30, 120]) {
+    const g = world({ hazards: [[140, 300, 20, 100, 120, activeTicks]] });
+    ticks(g, 800); assert.equal(g.saved, activeTicks === 30 ? 1 : 0);
+  }
+});
+
+test('Crystals are collected once per group and only within reach', () => {
+  const g = world({ total: 3, crystals: [[150, 290], [200, 200]] });
+  ticks(g, 900);
+  assert.equal(g.crystals.size, 1);
+  assert.equal(g.events.filter(e => e.type === 'crystal').length, 1);
+});
+
+test('Crystal locks prevent rescue until the required gems are collected', () => {
+  for (const y of [200, 290]) {
+    const g = world({ requiredCrystals: 1, crystals: [[150, y]] });
+    ticks(g, 900); assert.equal(g.saved, y === 290 ? 1 : 0);
+    assert.equal(g.exitOpen, y === 290);
+  }
+});

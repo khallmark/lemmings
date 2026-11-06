@@ -97,13 +97,53 @@ export class Renderer {
     c.drawImage(this.background, 0, 0);
     c.drawImage(this.ground, 0, 0);
     const time = game.tick;
-    for (const [x, y, width, height] of game.level.hazards || []) {
-      c.fillStyle = '#51445e'; c.fillRect(x, y, width, height);
-      c.fillStyle = '#c69cce';
+    for (const [x, y, width, height, direction] of game.level.wind || []) {
+      c.fillStyle = '#a9d5ea18'; c.fillRect(x, y, width, height);
+      c.fillStyle = '#99c7df'; c.font = '16px monospace'; c.textAlign = 'left';
+      for (let py = y + 20; py < y + height; py += 38) {
+        for (let px = x + 12; px < x + width - 20; px += 55) c.fillText(direction > 0 ? '→' : '←', px, py);
+      }
+    }
+    for (const [x, y, width, height] of game.level.water || []) {
+      c.fillStyle = '#226785c9'; c.fillRect(x, y, width, height);
+      c.fillStyle = '#8be2ed';
+      for (let px = x; px < x + width; px += 12) c.fillRect(px, y + Math.sin((px + time * 2) / 15) * 2, 8, 2);
+      c.font = '9px monospace'; c.textAlign = 'center'; c.fillText('WATER', x + width / 2, y + 20);
+    }
+    for (const hazard of game.level.hazards || []) {
+      const [x, y, width, height, period] = hazard, active = game.hazardActive(hazard);
+      c.fillStyle = active ? '#8b384b' : '#363e50'; c.fillRect(x, y, width, height);
+      c.fillStyle = active ? '#ffb06e' : '#8cacc0';
       for (let px = x; px < x + width; px += 8) c.fillRect(px, y + Math.sin((px + time) / 12) * 2, 6, 2);
+      if (period) { c.font = '9px monospace'; c.textAlign = 'center'; c.fillText(active ? 'DANGER' : 'SAFE', x + width / 2, y - 8); }
     }
     this.entrance(game.level.spawn, game.released < game.level.total && !game.nuking);
-    this.exit(game.level.exit, time);
+    this.exit(game.level.exit, time, game.exitOpen);
+    for (const [i, [x, y]] of (game.level.crystals || []).entries()) if (!game.crystals.has(i)) {
+      c.save(); c.translate(x, y + Math.sin(time / 12) * 2); c.rotate(Math.PI / 4);
+      c.fillStyle = '#8df3df'; c.fillRect(-5, -5, 10, 10);
+      c.fillStyle = '#e4fff3'; c.fillRect(-3, -3, 3, 3); c.restore();
+    }
+    for (const [x, y] of game.level.springs || []) {
+      c.fillStyle = '#f4cd7f'; c.fillRect(x - 9, y - 6, 18, 3);
+      c.fillStyle = '#a598bc'; c.fillRect(x - 5, y - 3, 10, 3);
+      c.font = '14px monospace'; c.textAlign = 'center'; c.fillText('↑', x, y - 13);
+    }
+    for (const [i, gate] of (game.level.gates || []).entries()) {
+      const open = game.openGates.has(i), [x, y, width, height] = gate.rect, [sx, sy] = gate.switch;
+      c.fillStyle = open ? '#6ca982' : '#cfab69'; c.fillRect(sx - 10, sy - 5, 20, 5);
+      c.font = '9px monospace'; c.textAlign = 'center'; c.fillText(`SWITCH ${i + 1}`, sx, sy - 15);
+      c.strokeStyle = open ? '#6ca982' : '#cfab69'; c.lineWidth = 2; c.strokeRect(x, y, width, height);
+      if (!open) for (let px = x; px < x + width; px += 6) c.fillRect(px, y, 3, height);
+    }
+    for (const [i, portal] of (game.level.portals || []).entries()) {
+      for (const [side, [x, y]] of [portal.from, portal.to].entries()) {
+        c.strokeStyle = side ? '#ffd39a' : '#94e6f7'; c.lineWidth = 3;
+        c.beginPath(); c.ellipse(x, y - 18, 12, 22, 0, 0, Math.PI * 2); c.stroke();
+        c.fillStyle = c.strokeStyle; c.font = '9px monospace'; c.textAlign = 'center';
+        c.fillText(`${i + 1} ${side ? 'OUT' : 'IN'}`, x, y - 47);
+      }
+    }
     for (const w of game.lemmings) if (w.alive) this.lemming(w, time, w.id === hovered);
     for (const p of this.particles) {
       c.globalAlpha = p.life / 30; c.fillStyle = p.color; c.fillRect(Math.round(p.x), Math.round(p.y), 3, 3);
@@ -128,20 +168,20 @@ export class Renderer {
     c.font = '9px monospace'; c.textAlign = 'center'; c.fillStyle = '#b2a1c5'; c.fillText('IN', x, y - 62);
   }
 
-  exit([x, y], time) {
+  exit([x, y], time, open) {
     const c = this.ctx;
     c.fillStyle = '#9c86ab'; c.fillRect(x - 25, y - 42, 50, 42);
     c.fillStyle = '#bca2ca'; c.fillRect(x - 29, y - 45, 58, 6); c.fillRect(x - 23, y - 51, 46, 6); c.fillRect(x - 17, y - 56, 34, 5);
     c.fillStyle = '#272333'; c.fillRect(x - 15, y - 33, 30, 33); c.fillRect(x - 10, y - 38, 20, 6);
-    c.fillStyle = '#b9e490'; c.fillRect(x - 11, y - 29, 22, 29);
-    c.fillStyle = '#d2f1b0'; c.fillRect(x - 7, y - 26, 14, 26);
+    c.fillStyle = open ? '#b9e490' : '#7b6b8a'; c.fillRect(x - 11, y - 29, 22, 29);
+    c.fillStyle = open ? '#d2f1b0' : '#aa8fb7'; c.fillRect(x - 7, y - 26, 14, 26);
     c.fillStyle = '#8b739d'; c.fillRect(x - 29, y - 4, 58, 4);
     for (const dx of [-36, 36]) {
       c.fillStyle = '#8a737b'; c.fillRect(x + dx, y - 26, 3, 22);
       c.fillStyle = '#edbf78'; c.fillRect(x + dx - 2, y - 32, 7, 8);
       c.fillStyle = '#ffe0a3'; c.fillRect(x + dx, y - 34 - (Math.floor(time / 6) % 2) * 2, 3, 8);
     }
-    c.textAlign = 'center'; c.font = '9px monospace'; c.fillStyle = '#c4e99e'; c.fillText('HOME', x, y - 66);
+    c.textAlign = 'center'; c.font = '9px monospace'; c.fillStyle = '#c4e99e'; c.fillText(open ? 'HOME' : 'NEED CRYSTALS', x, y - 66);
   }
 
   lemming(w, time, selected) {
@@ -149,6 +189,11 @@ export class Renderer {
     const frame = Math.floor(time / 5) % 2, working = ['builder', 'platformer', 'basher', 'miner', 'digger'].includes(w.state);
     c.save(); c.translate(x, y); c.scale(w.dir, 1);
     if (selected) { c.strokeStyle = '#f3f6ba'; c.lineWidth = 1; c.strokeRect(-10, -22, 20, 25); }
+    if (w.shield) {
+      c.strokeStyle = w.shield < 45 ? '#ffbd79' : '#84ebf2'; c.lineWidth = 2;
+      c.beginPath(); c.ellipse(0, -10, 14, 22, 0, 0, Math.PI * 2); c.stroke();
+      c.fillStyle = c.strokeStyle; c.fillRect(-12, 7, 24 * w.shield / 180, 2);
+    }
     if (w.floater && w.state === 'fall' && w.fall > 20) {
       c.fillStyle = '#dbb4da'; c.fillRect(-15, -37, 30, 5); c.fillRect(-11, -42, 22, 5); c.fillRect(-5, -45, 10, 3);
       c.strokeStyle = '#e9d5e8'; c.beginPath(); c.moveTo(-14, -32); c.lineTo(0, -13); c.lineTo(14, -32); c.stroke();

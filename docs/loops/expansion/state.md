@@ -1,10 +1,10 @@
 # Expansion state
 
-Iteration: 12 / 100
+Iteration: 24 / 100
 
-Last improvement: Balance the expanded toolbar into two readable rows
+Last improvement: Ember crossing tests shield timing instead of permanent protection
 
-Verification: ℹ tests 24; ℹ pass 24; ℹ fail 0
+Verification: ℹ tests 34; ℹ pass 34; ℹ fail 0
 
 Decision: continue
 
