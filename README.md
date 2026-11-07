@@ -1,8 +1,9 @@
 # Lemmings
 
-An original, browser-based rescue puzzle game inspired by Lemmings: **28 authored
+An original, browser-based rescue puzzle game inspired by Lemmings: **32 authored
 puzzles, 16 skills, four original synthesized music themes**, and a campaign of
-tunnels, bridges, water, wind, portals, switches, springs, timed traps, and crystals.
+tunnels, bridges, water, wind, portals, switches, springs, conveyors, timed traps,
+and crystals.
 No build step, backend, images, or JavaScript dependencies required.
 
 **[Play on GitHub Pages](https://khallmark.github.io/lemmings/)**
@@ -48,6 +49,12 @@ lemming to create terrain. Wind carries open parachutes. Numbered switches open
 matching gates, portals transfer lemmings, and crystal counters explain exit locks.
 Timed traps show the remaining safe/danger phase; builders show their stock.
 
+Gold conveyor belts add one pixel per tick to walking speed in their arrow
+direction. An ordinary walker stalls against a belt; a Runner can overcome it.
+Belts do not carry workers or airborne lemmings, create ground, or bypass walls.
+The four conveyor puzzles (29–32) combine them with bridges, tunnels, springs,
+portals, and the furnace. Hold the entrance to give a pioneer time to prepare.
+
 Each level has a rescue target, time limit, and finite skill inventory. The result
 appears when everyone has exited or died, or time expires. Every level is available
 from Level select. Best successful rescue counts persist in localStorage on the
@@ -56,7 +63,7 @@ persistent records. Switching browser tabs automatically pauses the game.
 
 Perfect rescues earn stars. Fastest wins, fewest skills used in a win, and best
 crystal collections are tracked independently. Share a puzzle with **Copy level
-link** (`?level=1` through `?level=28`). Returning to the home URL reopens your last
+link** (`?level=1` through `?level=32`). Returning to the home URL reopens your last
 expedition at its briefing, not midway through an attempt. Audio preferences are
 saved, but sound always requires an explicit click. Reduced-motion preferences
 disable decorative animation and particles without hiding hazard timing.
@@ -74,7 +81,7 @@ npm test
 - `renderer.js` — Canvas pixel art, terrain caching, characters, and particles.
 - `game.js` — browser input, menus, playback, audio orchestration, and saved records.
 - `audio.js` — original procedural melody, bass, percussion, and event effects.
-- `game.test.js` — complete legal-input solutions for all 28 levels, plus
+- `game.test.js` — complete legal-input solutions for all 32 levels, plus
   fall boundaries, steel, inventory, bombs, nuke, timeout, and reset checks.
 - `expansion.test.js` — expanded skills, environmental mechanics, entrance holds.
 

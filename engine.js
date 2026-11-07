@@ -255,8 +255,10 @@ export class Game {
       return;
     }
 
-    this.walk(w);
-    if (w.runner && w.state === 'walk' && this.at(w.x, w.y)) this.walk(w);
+    const belt = (this.level.conveyors || []).find(([x, y, width]) =>
+      w.x >= x && w.x < x + width && w.y === y);
+    const speed = (w.runner ? 2 : 1) + (belt ? belt[3] * w.dir : 0);
+    for (let step = 0; step < speed && w.state === 'walk' && this.at(w.x, w.y); step++) this.walk(w);
   }
 
   walk(w) {

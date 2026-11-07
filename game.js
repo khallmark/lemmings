@@ -193,6 +193,7 @@ function help() {
     gates: 'Walk onto the numbered pressure switch to open its gate permanently.',
     springs: 'Gold spring pads launch walkers across short gaps without spending a skill.',
     wind: 'Arrow-marked wind carries open parachutes in the indicated direction.',
+    conveyors: 'Gold belts add walking speed in their arrow direction. Ordinary walkers stall against them; Runners can push through. Working, jumping, and falling lemmings are not carried. Belts are not bridges.',
     hazards: 'Hazards are fatal without a Shield. Cycling traps are safe only while marked SAFE.',
     crystals: 'Collect crystals by walking close to them. The counter shows how many unlock HOME.',
   };

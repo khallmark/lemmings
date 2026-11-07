@@ -117,6 +117,18 @@ export class Renderer {
       for (let px = x; px < x + width; px += 12) c.fillRect(px, y + Math.sin((px + time * 2) / 15) * 2, 8, 2);
       c.font = '9px monospace'; c.textAlign = 'center'; c.fillText('WATER', x + width / 2, y + 20);
     }
+    for (const [x, y, width, direction] of game.level.conveyors || []) {
+      for (let px = x; px < x + width; px++) if (game.at(px, y)) {
+        const tread = ((px - direction * time) % 16 + 16) % 16;
+        c.fillStyle = tread < 5 ? '#e9ba70' : '#3b485d'; c.fillRect(px, y, 1, 7);
+        c.fillStyle = '#f6d99b'; c.fillRect(px, y, 1, 1);
+      }
+      c.fillStyle = '#f6d99b'; c.font = '11px monospace'; c.textAlign = 'center';
+      for (let px = x + 16; px < x + width - 8; px += 32) if (game.at(px, y)) {
+        c.fillText(direction > 0 ? '→' : '←', px, y + 20);
+      }
+      c.font = '9px monospace'; c.fillText(`BELT ${direction > 0 ? '→' : '←'}`, x + width / 2, y + 33);
+    }
     for (const hazard of game.level.hazards || []) {
       const [x, y, width, height, period] = hazard, active = game.hazardActive(hazard);
       c.fillStyle = active ? '#8b384b' : '#363e50'; c.fillRect(x, y, width, height);

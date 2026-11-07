@@ -53,6 +53,48 @@ test('Runner doubles walking distance without doubling bomb countdowns', () => {
   assert.equal(g.lemmings[0].bomb, 81);
 });
 
+test('Conveyors help walkers in either direction; only Runners beat an opposing belt', () => {
+  for (const direction of [-1, 1]) for (const beltDirection of [-1, 1]) for (const running of [false, true]) {
+    const g = world({ direction, conveyors: [[30, 300, 700, beltDirection]], skills: { runner: 1, bomber: 1 } });
+    if (running) g.assign(0, 'runner');
+    g.assign(0, 'bomber');
+    const x = g.lemmings[0].x;
+    ticks(g, 10);
+    const speed = direction === beltDirection ? (running ? 3 : 2) : (running ? 1 : 0);
+    assert.equal(g.lemmings[0].x, x + direction * speed * 10, `facing ${direction}, belt ${beltDirection}, runner ${running}`);
+    assert.equal(g.lemmings[0].bomb, 80, 'belts change walking, not timers');
+  }
+});
+
+test('Conveyor contact includes its start but excludes its end and elevated paths', () => {
+  const g = new Game({ total: 1, need: 1, time: 60, spawn: [100, 300], exit: [800, 300],
+    terrain: [[0, 300, 960, 140]], skills: {}, conveyors: [[102, 300, 2, 1], [105, 320, 100, 1]] });
+  g.start(); ticks(g, 15);
+  assert.equal(g.lemmings[0].x, 101);
+  g.update(); assert.equal(g.lemmings[0].x, 102);
+  g.update(); assert.equal(g.lemmings[0].x, 104);
+  g.update(); assert.equal(g.lemmings[0].x, 105);
+  g.update(); assert.equal(g.lemmings[0].x, 106, 'a belt below the path cannot pull walkers');
+});
+
+test('Conveyors leave anchored jobs alone and never carry walkers through steel or over open air', () => {
+  for (const skill of ['blocker', 'builder']) {
+    const games = [[], [[30, 300, 700, 1]]].map(conveyors => world({ conveyors, skills: { [skill]: 1 } }));
+    const before = games.map(g => ({ x: g.lemmings[0].x, y: g.lemmings[0].y }));
+    games.forEach(g => { g.assign(0, skill); ticks(g, 24); });
+    assert.deepEqual(games.map((g, i) => [g.lemmings[0].x - before[i].x, g.lemmings[0].y - before[i].y]),
+      skill === 'builder' ? [[24, -8], [24, -8]] : [[0, 0], [0, 0]]);
+  }
+  const wall = world({ conveyors: [[30, 300, 700, 1]], terrain: [[0, 300, 960, 140], [150, 250, 20, 50, 2]], skills: { runner: 1 } });
+  wall.assign(0, 'runner'); ticks(wall, 50);
+  assert.ok(wall.lemmings[0].x < 150);
+  assert.equal(wall.lemmings[0].dir, -1);
+  const gap = world({ conveyors: [[30, 300, 700, 1]], terrain: [[0, 300, 150, 140]], skills: { runner: 1 } });
+  gap.assign(0, 'runner'); ticks(gap, 50);
+  assert.equal(gap.saved, 0);
+  assert.equal(gap.dead, 1, 'a conveyor is not a bridge');
+});
+
 test('Platformer crosses a gap without gaining altitude', () => {
   const g = world({ terrain: [[0, 300, 130, 140], [200, 300, 760, 140]], skills: { platformer: 1 } });
   const x = g.lemmings[0].x;

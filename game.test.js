@@ -63,6 +63,22 @@ const solutions = [
   g => { for (const w of g.lemmings) if (w.alive) { if (!w.floater) g.assign(w.id, 'floater'); if (!w.swimmer) g.assign(w.id, 'swimmer'); } },
   g => { for (const w of g.lemmings) if (w.alive) { if (!w.runner) g.assign(w.id, 'runner'); if (w.x >= 520 && w.x <= 524 && !w.shield) g.assign(w.id, 'shield'); } },
   g => { for (const w of g.lemmings) if (w.alive && w.state === 'fall' && w.x >= 360 && w.x < 375 && w.y >= 312) g.assign(w.id, 'stoner'); },
+  g => { for (const w of g.lemmings) if (w.alive && !w.runner) g.assign(w.id, 'runner'); },
+  g => {
+    const w = g.lemmings[0];
+    g.releaseHeld = g.released === 1 && w.x < 650;
+    if (w?.state === 'walk' && w.x === 346 && g.skills.platformer === 2) g.assign(0, 'platformer');
+    if (w?.state === 'walk' && w.x === 590 && g.skills.basher === 2) g.assign(0, 'basher');
+  },
+  g => { for (const w of g.lemmings) if (w.alive && !w.runner) g.assign(w.id, 'runner'); },
+  g => {
+    g.releaseHeld = g.released === 1 && g.lemmings[0].x < 480;
+    for (const w of g.lemmings) if (w.alive) {
+      if (!w.runner) g.assign(w.id, 'runner');
+      if (w.state === 'walk' && w.x === 430 && g.skills.basher === 2) g.assign(w.id, 'basher');
+      if (w.x >= 710 && w.x <= 720 && !w.shield) g.assign(w.id, 'shield');
+    }
+  },
 ];
 
 for (const [index, level] of LEVELS.entries()) {
