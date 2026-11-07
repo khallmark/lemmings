@@ -5,6 +5,7 @@ import { Soundscape, TRACKS } from './audio.js';
 
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2, '0');
+const skillName = id => SKILLS.find(skill => skill.id === id)?.name || id;
 const canvas = $('world');
 const renderer = new Renderer(canvas);
 const modal = $('modal');
@@ -171,7 +172,7 @@ function levelMenu() {
   const filterLevels = () => {
     for (const card of $('modal-content').querySelectorAll('.level-card')) {
       const index = Number(card.dataset.level), level = LEVELS[index];
-      const text = `${level.name} ${level.theme} ${Object.keys(level.skills).join(' ')}`.toLowerCase();
+      const text = `${level.name} ${level.theme} ${Object.keys(level.skills).map(id => `${id} ${skillName(id)}`).join(' ')}`.toLowerCase();
       card.hidden = ($('chapter').value !== 'all' && Math.floor(index / 8) !== Number($('chapter').value)) || !text.includes($('level-search').value.trim().toLowerCase()) || ($('unfinished').checked && progress[index] >= level.need);
     }
     $('no-levels').hidden = !!$('modal-content').querySelector('.level-card:not([hidden])');
@@ -189,7 +190,7 @@ function levelMenu() {
 
 function help() {
   const mechanics = {
-    water: 'Water needs a Swimmer. A Floater does not protect against drowning.',
+    water: 'Water needs a Swimmer. A Drifter does not protect against drowning.',
     portals: 'Enter the blue portal to emerge at its matching orange exit.',
     gates: 'Walk onto the numbered pressure switch to open its gate permanently.',
     springs: 'Gold spring pads launch walkers across short gaps without spending a skill.',
@@ -199,7 +200,7 @@ function help() {
     hazards: 'Hazards are fatal without a Shield. Cycling traps are safe only while marked SAFE.',
     crystals: 'Collect crystals by walking close to them. The counter shows how many unlock HOME.',
   };
-  openModal('Small hats. Clever plans.', `<p class="dialog-copy">Gnomes walk on their own and turn at walls. Select a skill, then click a gnome. Falls over 100 pixels are fatal without a Floater. Silver terrain is indestructible.</p>
+  openModal('Small hats. Clever plans.', `<p class="dialog-copy">Gnomes walk on their own and turn at walls. Select a skill, then click a gnome. Falls over 100 pixels are fatal without a Drifter. Silver terrain is indestructible.</p>
     <h3>In this expedition</h3><p class="dialog-copy">${game.level.hint}</p>
     ${Object.entries(mechanics).filter(([key]) => game.level[key]?.length).map(([, text]) => `<p class="dialog-copy">${text}</p>`).join('')}
     <div class="guide">${SKILLS.filter(s => s.id in game.level.skills).map(s => { const i = SKILLS.indexOf(s); return `<div><strong>${i >= 8 ? 'Shift+' : ''}${i % 8 + 1} · ${s.name}</strong><p>${s.help}</p></div>`; }).join('')}</div>
@@ -259,8 +260,8 @@ function nearest(x, y) {
 function assign(id) {
   if (!game.lemmings.some(w => w.id === id && targetable(w))) return;
   if (game.assign(id, selected)) {
-    announce(`${selected} assigned. ${game.skills[selected]} remaining.`);
-    $('selection-note').textContent = `${selected[0].toUpperCase() + selected.slice(1)} assigned! ${game.skills[selected]} left.`;
+    announce(`${skillName(selected)} assigned. ${game.skills[selected]} remaining.`);
+    $('selection-note').textContent = `${skillName(selected)} assigned! ${game.skills[selected]} left.`;
   } else {
     const message = game.skills[selected] ? 'Cannot assign that skill here. Try a walking gnome.' : 'No uses left. Choose another skill.';
     announce(message); $('selection-note').textContent = message;
@@ -291,7 +292,7 @@ canvas.addEventListener('keydown', event => {
     const scale = canvas.clientWidth / WIDTH;
     $('viewport').scrollLeft = Math.max(0, next.x * scale - $('viewport').clientWidth / 2);
     $('viewport').scrollTop = Math.max(0, next.y * scale - $('viewport').clientHeight / 2);
-    announce(`Gnome ${next.id + 1}, ${next.state}${['climber', 'floater', 'runner', 'swimmer', 'shield'].filter(s => next[s]).map(s => `, ${s}`).join('')}.`);
+    announce(`Gnome ${next.id + 1}, ${skillName(next.state)}${['climber', 'floater', 'runner', 'swimmer', 'shield'].filter(s => next[s]).map(s => `, ${skillName(s)}`).join('')}.`);
   }
   if (event.key === 'Enter') { event.preventDefault(); assign(keyboardTarget); }
 });
@@ -426,7 +427,7 @@ function frame(now) {
   hovered = pointer ? nearest((pointer.x - rect.left) * WIDTH / rect.width, (pointer.y - rect.top) * HEIGHT / rect.height) : keyboardTarget;
   const target = game.lemmings.find(w => w.id === hovered && targetable(w));
   if (!target) hovered = null;
-  $('target-status').textContent = target ? `#${target.id + 1} ${target.dir > 0 ? '→' : '←'} ${target.state}${['climber', 'floater', 'runner', 'swimmer', 'shield'].filter(s => target[s]).map(s => ` · ${s}`).join('')}` : 'Point at a gnome to inspect it.';
+  $('target-status').textContent = target ? `#${target.id + 1} ${target.dir > 0 ? '→' : '←'} ${skillName(target.state)}${['climber', 'floater', 'runner', 'swimmer', 'shield'].filter(s => target[s]).map(s => ` · ${skillName(s)}`).join('')}` : 'Point at a gnome to inspect it.';
   renderer.draw(game, hovered, active);
   // DOM values only change at simulation cadence, not for every painted frame.
   if (frame.lastTick !== game.tick) { updateUI(); frame.lastTick = game.tick; }

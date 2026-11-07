@@ -22,7 +22,7 @@ local file will not work. Google Fonts is optional; system fonts are used when
 offline. The game's artwork and sound effects are generated locally.
 
 - Select a skill, then click a gnome. You can assign skills while paused.
-- **1–8:** Climber, Floater, Bomber, Blocker, Builder, Basher, Miner, Digger.
+- **1–8:** Scaler, Drifter, Boomer, Stopper, Stacker, Smasher, Tunneler, Burrower.
 - **Shift+1–8:** Walker, Turner, Runner, Platformer, Jumper, Swimmer, Stoner, Shield.
 - **Space:** pause/resume when the game field is focused. **Escape:** pause.
 - **F:** cycle 1×, 3×, and 0.5× speed. **Period:** pause and advance one tick.
@@ -37,18 +37,18 @@ offline. The game's artwork and sound effects are generated locally.
 - **Zoom / Follow:** magnify the field or track a keyboard-selected survivor.
 - **Sound studio:** choose a soundtrack, mute only music, or mix music/effects.
 
-Walkers turn at walls and blockers. Climbers and floaters keep their abilities.
-Builders place 16 steps; bashers, miners, and diggers remove earth in their own
-directions. Falls greater than 100 world pixels are fatal without a floater.
-Silver steel cannot be destroyed. Bombers explode after three game seconds.
+Walkers turn at walls and Stoppers. Scalers and Drifters keep their abilities.
+Stackers place 16 steps; Smashers, Tunnelers, and Burrowers remove earth in their own
+directions. Falls greater than 100 world pixels are fatal without a Drifter.
+Silver steel cannot be destroyed. Boomers explode after three game seconds.
 Nuke stops spawning and explodes the remaining walkers; rescued walkers stay safe.
 
-Walker cancels ground jobs and frees blockers. Runner doubles walking only;
+Walker cancels ground jobs and frees Stoppers. Runner doubles walking only;
 Platformer lays flat bridges. Jumper and springs clear small gaps. Swimmer handles
 water, while Shield grants six seconds of hazard protection. Stoner sacrifices a
 gnome to create terrain. Wind carries open parachutes. Numbered switches open
 matching gates, portals transfer gnomes, and crystal counters explain exit locks.
-Timed traps show the remaining safe/danger phase; builders show their stock.
+Timed traps show the remaining safe/danger phase; Stackers show their stock.
 
 Gold conveyor belts add one pixel per tick to walking speed in their arrow
 direction. An ordinary walker stalls against a belt; a Runner can overcome it.
