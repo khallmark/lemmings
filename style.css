@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
-:root { color-scheme: light; --ink: #302a43; --muted: #756f83; --paper: #f1eff6; --purple: #7761c4; --lime: #c5f394; --line: #dcd8e6; }
+:root { color-scheme: light; --ink: #263d35; --muted: #61756a; --paper: #edf3ea; --purple: #29776c; --lime: #c5f394; --line: #cedbce; }
 * { box-sizing: border-box; }
 body { margin: 0; color: var(--ink); background: var(--paper); font: 14px/1.5 'DM Sans', sans-serif; }
 button, input { font: inherit; }
@@ -15,8 +15,9 @@ a:hover { color: var(--purple); }
 .app { width: min(1180px, calc(100% - 80px)); margin: auto; }
 .app:fullscreen { width: 100%; overflow: auto; padding: 0 max(16px, calc((100vw - 1180px) / 2)); background: var(--paper); }
 .masthead { display: flex; justify-content: space-between; align-items: center; min-height: 105px; border-bottom: 1px solid var(--line); gap: 20px; }
-.brand { font: 700 28px 'Space Grotesk', sans-serif; display: flex; align-items: center; gap: 13px; letter-spacing: -1.3px; }
-.brand-sprite { width: 21px; height: 27px; background: linear-gradient(to bottom, #74a748 0 29%, #eac5a4 29% 56%, #8d75cd 56% 89%, transparent 89%); box-shadow: -4px 0 0 -1px #74a748; image-rendering: pixelated; transform: rotate(-6deg); }
+.brand { font: 700 32px Georgia, serif; display: flex; align-items: center; gap: 13px; letter-spacing: -1.3px; }
+.brand-sprite, .mini-gnomes span { display: block; flex-shrink: 0; width: 24px; height: 34px; background: linear-gradient(to bottom, #ed806b 0 44%, #f6d5af 44% 57%, #f5edd8 57% 76%, #49a99d 76% 91%, #805645 91%); clip-path: polygon(62% 0, 100% 44%, 87% 44%, 87% 76%, 95% 76%, 95% 100%, 55% 100%, 55% 91%, 40% 91%, 40% 100%, 5% 100%, 5% 76%, 13% 76%, 13% 44%, 0 44%); image-rendering: pixelated; }
+.brand-sprite { transform: rotate(-6deg); }
 .edition { font: 400 12px 'DM Sans', sans-serif; letter-spacing: 0; color: var(--muted); border-left: 1px solid #c9c3d4; padding-left: 15px; margin-left: 4px; }
 nav { display: flex; gap: 9px; }
 nav button { font-size: 12px; border: 0; padding: 9px 11px; }
@@ -53,9 +54,8 @@ h1 { margin: 0; font: 600 clamp(23px, 3vw, 32px)/1.2 'Space Grotesk', sans-serif
 .primary { background: var(--lime); border-color: var(--lime); color: #2e3d27; padding: 11px 27px; box-shadow: 0 3px 0 #7fa55a; font-size: 14px; }
 .primary:hover { background: #d9ffb3; border-color: #d9ffb3; }
 .primary span { font-size: 10px; margin-left: 17px; }
-.mini-lemmings { display: flex; justify-content: center; align-items: end; gap: 12px; height: 30px; }
-.mini-lemmings span { display: block; width: 13px; height: 24px; background: linear-gradient(to bottom, #bef080 0 28%, #f3d1b0 28% 51%, #a28aef 51% 86%, #f3d1b0 86%); box-shadow: -3px 4px 0 -1px #a28aef; }
-.mini-lemmings span:nth-child(2) { transform: translateY(-5px) rotate(8deg); }
+.mini-gnomes { display: flex; justify-content: center; align-items: end; gap: 12px; height: 39px; }
+.mini-gnomes span:nth-child(2) { transform: translateY(-5px) rotate(8deg); }
 .skill-tray { display: grid; grid-template-columns: repeat(var(--skill-columns, 8), 1fr); padding: 13px 14px 10px; gap: 8px; }
 .skill { min-width: 0; position: relative; color: #d7cee9; border: 1px solid #574b6b; background: #3b324e; border-radius: 5px; padding: 7px 5px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .skill:hover { background: #514267; border-color: #9982bb; }
@@ -113,7 +113,7 @@ dialog::backdrop { background: #1c172dab; backdrop-filter: blur(4px); }
 .studio input { accent-color: var(--purple); max-width: 120px; }
 .studio select { font: inherit; color: var(--ink); border: 1px solid var(--line); border-radius: 5px; padding: 6px; max-width: 200px; }
 @media (min-width: 1500px) { .app { padding-top: 15px; } }
-@media (max-width: 900px) { .app { width: calc(100% - 32px); } .edition { display: none; } .status-bar { gap: 18px; } .briefing-card { padding: 18px 25px; } .briefing-card h2 { font-size: 24px; } .mini-lemmings { display: none; } }
+@media (max-width: 900px) { .app { width: calc(100% - 32px); } .edition { display: none; } .status-bar { gap: 18px; } .briefing-card { padding: 18px 25px; } .briefing-card h2 { font-size: 24px; } .mini-gnomes { display: none; } }
 @media (max-width: 600px) {
   .app { width: calc(100% - 20px); } .masthead { min-height: 83px; flex-wrap: wrap; gap: 9px; padding: 16px 0 12px; } .brand { font-size: 26px; } nav { gap: 2px; } nav button { font-size: 11px; padding: 6px 8px; } .level-heading { padding: 20px 0; } .mission { display: none; } h1 { font-size: 24px; }
   .game-shell { border-width: 3px; } .status-bar { padding: 10px; gap: 13px; font-size: 10px; } .status-bar strong { font-size: 14px; } .status-bar > div:not(.rescue-track) { gap: 4px; } #saved-goal, .rescue-track { display: none; }

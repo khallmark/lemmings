@@ -12,6 +12,7 @@ let game, levelIndex = 0, selected = 'basher', paused = false, speed = 1;
 let hovered = null, pointer = null, keyboardTarget = null, lastTime = 0, accumulator = 0;
 let following = null;
 let audio, score, sound = false, resultShown = false;
+// Keep legacy storage keys so the Gnomes rebrand preserves existing saves.
 let progress = {};
 try {
   const stored = JSON.parse(localStorage.getItem('lemmings-progress') || '{}');
@@ -70,7 +71,7 @@ function chooseSkill(id) {
   selected = id;
   const skill = SKILLS.find(s => s.id === id);
   $('hint').textContent = skill.help;
-  $('selection-note').textContent = `${skill.name} selected. Click a lemming.`;
+  $('selection-note').textContent = `${skill.name} selected. Click a gnome.`;
   announce(`${skill.name} selected. ${game.skills[id]} remaining.`);
   updateUI();
 }
@@ -94,10 +95,10 @@ function loadLevel(index, first = false) {
   $('viewport').scrollLeft = 0;
   $('level-meta').textContent = `Level ${pad(index + 1)} / ${pad(LEVELS.length)} · ${game.level.theme}`;
   $('level-title').textContent = game.level.name;
-  $('goal').textContent = `Save ${game.level.need} of ${game.level.total} lemmings`;
+  $('goal').textContent = `Save ${game.level.need} of ${game.level.total} gnomes`;
   $('saved-goal').textContent = `/ ${pad(game.level.need)} needed`;
   $('hint').textContent = game.level.hint;
-  $('selection-note').textContent = 'Select a skill. Click a lemming.';
+  $('selection-note').textContent = 'Select a skill. Click a gnome.';
   $('release').value = 5; $('release-value').textContent = 5;
   $('briefing').hidden = false;
   $('result-stats').hidden = true;
@@ -117,7 +118,7 @@ function updateUI() {
   $('track-name').textContent = `Original score: ${TRACKS[track].name}`;
   $('out').textContent = `${pad(game.released)} / ${pad(game.level.total)}`;
   $('saved').textContent = pad(game.saved);
-  $('goal').textContent = game.saved >= game.level.need ? '✓ Goal met — rescue more for a perfect run!' : `Save ${game.level.need} of ${game.level.total} lemmings`;
+  $('goal').textContent = game.saved >= game.level.need ? '✓ Goal met — rescue more for a perfect run!' : `Save ${game.level.need} of ${game.level.total} gnomes`;
   $('lost').textContent = pad(game.dead);
   $('crowd-status').textContent = `${game.released - game.saved - game.dead} in the field · ${game.level.total - game.released} waiting${game.releaseHeld ? ' · Entrance held' : ''}`;
   $('crystals').hidden = !game.level.crystals?.length;
@@ -135,7 +136,7 @@ function updateUI() {
   $('zoom').disabled = game.status !== 'running';
   $('follow').disabled = game.status !== 'running' || !game.lemmings.some(w => w.alive);
   $('follow').setAttribute('aria-pressed', String(following !== null));
-  $('follow').textContent = following === null ? 'Follow lemming' : `Following #${following + 1}`;
+  $('follow').textContent = following === null ? 'Follow gnome' : `Following #${following + 1}`;
   $('zoom').setAttribute('aria-pressed', String($('viewport').classList.contains('zoomed')));
   $('zoom').textContent = $('viewport').classList.contains('zoomed') ? 'Zoom out' : 'Zoom in';
   $('hold').disabled = game.nuking || game.released === game.level.total || ['won', 'lost'].includes(game.status);
@@ -163,7 +164,7 @@ function levelMenu() {
   const perfect = LEVELS.filter((level, i) => progress[i] === level.total).length;
   const next = LEVELS.findIndex((level, i) => !(progress[i] >= level.need));
   openModal('A little adventure awaits', `<p class="dialog-copy"><strong>${completed}/${LEVELS.length} completed · ★ ${perfect} perfect rescues</strong><br>Every level is open to explore. Your best rescues are saved on this browser.</p>
-    <div class="menu-tools"><label>Chapter <select id="chapter"><option value="all">All expeditions</option><option value="0">1 · The old paths</option><option value="1">2 · New horizons</option><option value="2">3 · Crystal frontiers</option><option value="3">4 · The encore</option></select></label><label>Search <input id="level-search" type="search" placeholder="Name or skill"></label></div>
+    <div class="menu-tools"><label>Chapter <select id="chapter"><option value="all">All expeditions</option><option value="0">1 · The old paths</option><option value="1">2 · New horizons</option><option value="2">3 · Crystal frontiers</option><option value="3">4 · The encore</option><option value="4">5 · The clockwork garden</option></select></label><label>Search <input id="level-search" type="search" placeholder="Name or skill"></label></div>
     <div class="menu-tools"><label><input id="unfinished" type="checkbox"> Unfinished only</label>${next < 0 ? '' : `<button data-level="${next}">Continue campaign → ${pad(next + 1)}</button>`}</div>
     <p id="no-levels" class="dialog-copy" hidden>No expeditions match. Try another chapter or search.</p>
     <div class="level-list">${LEVELS.map((level, i) => `<button class="level-card" data-level="${i}"><small>${pad(i + 1)} · ${level.difficulty}</small>${level.name}<small>Save ${level.need} of ${level.total}</small><span class="best">${progress[i] === level.total ? '★ Perfect rescue!' : progress[i] === undefined ? 'Not completed yet' : `✓ Best: ${progress[i]} rescued`}</span>${records[i] ? `<small>Fastest ${(records[i].ticks / TICK_RATE).toFixed(1)}s${records[i].skills === undefined ? '' : ` · Fewest skills ${records[i].skills}`}${level.crystals?.length ? ` · ◆ ${records[i].gems || 0}/${level.crystals.length}` : ''}</small>` : ''}</button>`).join('')}</div>`);
@@ -193,15 +194,16 @@ function help() {
     gates: 'Walk onto the numbered pressure switch to open its gate permanently.',
     springs: 'Gold spring pads launch walkers across short gaps without spending a skill.',
     wind: 'Arrow-marked wind carries open parachutes in the indicated direction.',
-    conveyors: 'Gold belts add walking speed in their arrow direction. Ordinary walkers stall against them; Runners can push through. Working, jumping, and falling lemmings are not carried. Belts are not bridges.',
+    conveyors: 'Gold belts add walking speed in their arrow direction. Ordinary walkers stall against them; Runners can push through. Working, jumping, and falling gnomes are not carried. Belts are not bridges.',
+    patrols: 'Moving saws follow dotted rails, even with reduced motion enabled. Their red housings mark the danger area. Shield protects for six seconds; building a route above them also works.',
     hazards: 'Hazards are fatal without a Shield. Cycling traps are safe only while marked SAFE.',
     crystals: 'Collect crystals by walking close to them. The counter shows how many unlock HOME.',
   };
-  openModal('Little feet. You make the plan.', `<p class="dialog-copy">Lemmings walk on their own and turn at walls. Select a skill, then click a lemming. Falls over 100 pixels are fatal without a Floater. Silver terrain is indestructible.</p>
+  openModal('Small hats. Clever plans.', `<p class="dialog-copy">Gnomes walk on their own and turn at walls. Select a skill, then click a gnome. Falls over 100 pixels are fatal without a Floater. Silver terrain is indestructible.</p>
     <h3>In this expedition</h3><p class="dialog-copy">${game.level.hint}</p>
     ${Object.entries(mechanics).filter(([key]) => game.level[key]?.length).map(([, text]) => `<p class="dialog-copy">${text}</p>`).join('')}
     <div class="guide">${SKILLS.filter(s => s.id in game.level.skills).map(s => { const i = SKILLS.indexOf(s); return `<div><strong>${i >= 8 ? 'Shift+' : ''}${i % 8 + 1} · ${s.name}</strong><p>${s.help}</p></div>`; }).join('')}</div>
-    <p class="dialog-copy" style="margin-top:22px"><b>Controls:</b> 1–8 select classic skills; Shift+1–8 select expansion skills. Space pauses; F cycles 1×, 3×, 0.5×; period steps one tick; R restarts. Focus the field and use ←/→ to select a lemming, Enter to assign. Skills work while paused. Hold entrance stops new releases, not the clock. Direction filtering separates overlapping lemmings. Zoom magnifies the field; scroll to explore, or Follow a keyboard-selected lemming.</p>`);
+    <p class="dialog-copy" style="margin-top:22px"><b>Controls:</b> 1–8 select classic skills; Shift+1–8 select expansion skills. Space pauses; F cycles 1×, 3×, 0.5×; period steps one tick; R restarts. Focus the field and use ←/→ to select a gnome, Enter to assign. Skills work while paused. Hold entrance stops new releases, not the clock. Direction filtering separates overlapping gnomes. Zoom magnifies the field; scroll to explore, or Follow a keyboard-selected gnome.</p>`);
 }
 
 function confirmAction(title, copy, label, action) {
@@ -236,7 +238,7 @@ function results() {
   if (game.level.crystals?.length) $('result-stats').textContent += ` · ◆ ${game.crystals.size}/${game.level.crystals.length}${game.crystals.size === game.level.crystals.length ? ' All crystals!' : ''}`;
   $('briefing-kicker').textContent = won ? complete ? 'Every expedition completed!' : game.saved === game.level.total ? '★ Perfect rescue — everyone survived!' : 'A little victory!' : 'There’s another way.';
   $('briefing-title').textContent = won ? complete ? 'You brought them home.' : 'Home, sweet home.' : 'Let’s try a new plan.';
-  $('briefing-copy').textContent = `${game.saved} of ${game.level.total} lemmings rescued. ${won ? 'Your little friends thank you.' : `You needed ${game.level.need}. ${game.tick >= game.level.time * TICK_RATE ? 'Time ran out.' : 'Try pausing to plan your next move.'}`}`;
+  $('briefing-copy').textContent = `${game.saved} of ${game.level.total} gnomes rescued. ${won ? 'The kettle is on. Hats off to you.' : `You needed ${game.level.need}. ${game.tick >= game.level.time * TICK_RATE ? 'Time ran out.' : 'Try pausing to plan your next move.'}`}`;
   $('briefing-foot').textContent = won ? `Time: ${(game.tick / TICK_RATE).toFixed(1)}s · Fastest win: ${(records[levelIndex].ticks / TICK_RATE).toFixed(1)}s` : game.level.hint;
   $('start').textContent = won ? levelIndex < LEVELS.length - 1 ? 'Next expedition ▶' : 'Choose an expedition ▦' : 'Try again ↻';
   announce(`${won ? 'Level complete.' : 'Level failed.'} ${game.saved} rescued.`);
@@ -260,7 +262,7 @@ function assign(id) {
     announce(`${selected} assigned. ${game.skills[selected]} remaining.`);
     $('selection-note').textContent = `${selected[0].toUpperCase() + selected.slice(1)} assigned! ${game.skills[selected]} left.`;
   } else {
-    const message = game.skills[selected] ? 'Cannot assign that skill here. Try a walking lemming.' : 'No uses left. Choose another skill.';
+    const message = game.skills[selected] ? 'Cannot assign that skill here. Try a walking gnome.' : 'No uses left. Choose another skill.';
     announce(message); $('selection-note').textContent = message;
   }
   updateUI();
@@ -289,7 +291,7 @@ canvas.addEventListener('keydown', event => {
     const scale = canvas.clientWidth / WIDTH;
     $('viewport').scrollLeft = Math.max(0, next.x * scale - $('viewport').clientWidth / 2);
     $('viewport').scrollTop = Math.max(0, next.y * scale - $('viewport').clientHeight / 2);
-    announce(`Lemming ${next.id + 1}, ${next.state}${['climber', 'floater', 'runner', 'swimmer', 'shield'].filter(s => next[s]).map(s => `, ${s}`).join('')}.`);
+    announce(`Gnome ${next.id + 1}, ${next.state}${['climber', 'floater', 'runner', 'swimmer', 'shield'].filter(s => next[s]).map(s => `, ${s}`).join('')}.`);
   }
   if (event.key === 'Enter') { event.preventDefault(); assign(keyboardTarget); }
 });
@@ -339,7 +341,7 @@ $('zoom').onclick = () => {
 };
 $('restart').onclick = restart;
 $('replay').onclick = () => loadLevel(levelIndex);
-$('nuke').onclick = () => confirmAction('End this attempt?', 'Stop releasing lemmings and explode those still outside. Already rescued lemmings are safe. If you met the rescue goal, this still completes the level.', 'Nuke remaining', () => { game.nuke(); paused = false; updateUI(); });
+$('nuke').onclick = () => confirmAction('End this attempt?', 'Stop releasing gnomes and explode those still outside. Already rescued gnomes are safe. If you met the rescue goal, this still completes the level.', 'Nuke remaining', () => { game.nuke(); paused = false; updateUI(); });
 $('release').oninput = event => {
   game.releaseInterval = 85 - Number(event.target.value) * 8;
   game.spawnIn = Math.min(game.spawnIn, game.releaseInterval);
@@ -424,7 +426,7 @@ function frame(now) {
   hovered = pointer ? nearest((pointer.x - rect.left) * WIDTH / rect.width, (pointer.y - rect.top) * HEIGHT / rect.height) : keyboardTarget;
   const target = game.lemmings.find(w => w.id === hovered && targetable(w));
   if (!target) hovered = null;
-  $('target-status').textContent = target ? `#${target.id + 1} ${target.dir > 0 ? '→' : '←'} ${target.state}${['climber', 'floater', 'runner', 'swimmer', 'shield'].filter(s => target[s]).map(s => ` · ${s}`).join('')}` : 'Point at a lemming to inspect it.';
+  $('target-status').textContent = target ? `#${target.id + 1} ${target.dir > 0 ? '→' : '←'} ${target.state}${['climber', 'floater', 'runner', 'swimmer', 'shield'].filter(s => target[s]).map(s => ` · ${s}`).join('')}` : 'Point at a gnome to inspect it.';
   renderer.draw(game, hovered, active);
   // DOM values only change at simulation cadence, not for every painted frame.
   if (frame.lastTick !== game.tick) { updateUI(); frame.lastTick = game.tick; }

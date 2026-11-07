@@ -79,6 +79,23 @@ const solutions = [
       if (w.x >= 710 && w.x <= 720 && !w.shield) g.assign(w.id, 'shield');
     }
   },
+  g => { for (const w of g.lemmings) if (w.alive && w.x === 300 && !w.shield) g.assign(w.id, 'shield'); },
+  g => {
+    const w = g.lemmings[0];
+    g.releaseHeld = g.released === 1 && w.x < 510;
+    if (w?.state === 'walk' && w.x === 300 && g.skills.builder === 2) g.assign(0, 'builder');
+    if (w?.state === 'walk' && w.x === 396 && w.y === 268 && g.skills.platformer === 2) g.assign(0, 'platformer');
+  },
+  g => { for (const w of g.lemmings) if (w.alive) { if (!w.swimmer) g.assign(w.id, 'swimmer'); if (w.x === 560 && !w.shield) g.assign(w.id, 'shield'); } },
+  g => {
+    const first = g.lemmings[0];
+    g.releaseHeld = g.released === 1 && first.x < 500;
+    if (first?.state === 'walk' && first.x === 386 && g.skills.platformer === 2) g.assign(0, 'platformer');
+    for (const w of g.lemmings) if (w.alive) {
+      if (w.x >= 500 && !w.runner) g.assign(w.id, 'runner');
+      if (w.x >= 550 && w.x <= 554 && !w.shield) g.assign(w.id, 'shield');
+    }
+  },
 ];
 
 for (const [index, level] of LEVELS.entries()) {

@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#29243d">
-  <meta name="description" content="Little lemmings. Big responsibility. 32 original rescue puzzles, 16 skills, and four original music themes, playable in your browser.">
-  <title>Lemmings — Little feet, big adventure</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23b9ec82' d='M7 3h18v9H7z'/%3E%3Cpath fill='%23ffe1ba' d='M10 12h15v8H10z'/%3E%3Cpath fill='%239d8cee' d='M9 20h13v12H9z'/%3E%3C/svg%3E">
+  <meta name="description" content="Small hats. Clever plans. Guide your Gnomes home through 36 original rescue puzzles, with 16 skills and five original music themes.">
+  <title>Gnomes — Small hats. Clever plans.</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%2349a99d' d='M8 22h16v10H8z'/%3E%3Cpath fill='%23f6d5af' d='M9 13h15v9H9z'/%3E%3Cpath fill='%23f5edd8' d='M8 19h16l-8 10z'/%3E%3Cpath fill='%23ed806b' d='M5 15L18 1l9 14z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main class="app">
     <header class="masthead">
-      <a href="./" class="brand" aria-label="Lemmings home"><span class="brand-sprite" aria-hidden="true"></span>Lemmings<span class="edition">a little rescue mission</span></a>
+      <a href="./" class="brand" aria-label="Gnomes home"><span class="brand-sprite" aria-hidden="true"></span>Gnomes<span class="edition">small hats. clever plans.</span></a>
       <nav aria-label="Game menu">
         <button id="levels-button">Level select <span aria-hidden="true">▦</span></button>
         <button id="help-button">How to play <span aria-hidden="true">?</span></button>
@@ -21,11 +21,11 @@
     </header>
 
     <section class="level-heading" aria-labelledby="level-title">
-      <div><p id="level-meta">Level 01 / 32 · Mosslight hollow</p><h1 id="level-title">A little breakthrough</h1></div>
-      <div class="mission"><span class="mission-dot"></span><div>Bring them home<strong id="goal">Save 8 of 10 lemmings</strong></div></div>
+      <div><p id="level-meta">Level 01 / 36 · Mosslight hollow</p><h1 id="level-title">A little breakthrough</h1></div>
+      <div class="mission"><span class="mission-dot"></span><div>Bring them home<strong id="goal">Save 8 of 10 gnomes</strong></div></div>
     </section>
 
-    <section class="game-shell" aria-label="Lemmings game">
+    <section class="game-shell" aria-label="Gnomes game">
       <div class="status-bar">
         <div><span class="status-label">Out</span><strong id="out">00 / 10</strong></div>
         <div><span class="status-label">Saved</span><strong id="saved">00</strong><span id="saved-goal">/ 08 needed</span></div>
@@ -34,12 +34,12 @@
         <div class="time"><span class="status-label">Time</span><strong id="time">02:00</strong></div>
       </div>
       <div class="viewport" id="viewport">
-        <canvas id="world" width="960" height="440" tabindex="0" aria-label="Game field. Arrow keys select a lemming, Enter assigns. 1 through 8 select classic skills, Shift plus 1 through 8 select expansion skills. Space pauses."></canvas>
+        <canvas id="world" width="960" height="440" tabindex="0" aria-label="Game field. Arrow keys select a gnome, Enter assigns. 1 through 8 select classic skills, Shift plus 1 through 8 select expansion skills. Space pauses."></canvas>
         <div id="pause-label" hidden>Paused <span>Take your time. You can still assign skills.</span></div>
         <div id="briefing" class="briefing">
           <div class="briefing-card">
-            <div class="mini-lemmings" aria-hidden="true"><span></span><span></span><span></span></div>
-            <p id="briefing-kicker">Small feet. Big adventure.</p>
+            <div class="mini-gnomes" aria-hidden="true"><span></span><span></span><span></span></div>
+            <p id="briefing-kicker">Small hats. Clever plans.</p>
             <h2 id="briefing-title">A little help goes a long way.</h2>
             <p id="briefing-copy">They keep walking. You make the plan. Give your little friends the right skills and guide them safely home.</p>
             <small id="result-stats" hidden></small>
@@ -53,19 +53,19 @@
       <div class="transport">
         <div class="playback"><button id="pause" title="Pause or resume (Space)">Ⅱ <span>Pause</span></button><button id="speed" aria-pressed="false" title="Cycle normal, fast, and half speed (F)">▶▶ <span>1×</span></button><button id="restart" title="Restart level (R)">↻ <span>Restart</span></button></div>
         <label class="release">Release rate <input id="release" type="range" min="1" max="10" value="5"><output id="release-value">5</output></label>
-        <button id="nuke" class="danger" title="End this attempt by exploding remaining lemmings">✹ <span>Nuke</span></button>
+        <button id="nuke" class="danger" title="End this attempt by exploding remaining gnomes">✹ <span>Nuke</span></button>
       </div>
       <div class="field-tools"><button id="step" title="Advance one simulation tick (.)">Step ▷|</button><button id="hold" aria-pressed="false">Hold entrance</button>
         <select id="direction" aria-label="Target direction"><option value="0">Target: either direction</option><option value="-1">Target: walking left ←</option><option value="1">Target: walking right →</option></select>
         <button id="zoom" aria-pressed="false">Zoom in</button>
-        <button id="follow" aria-pressed="false" title="Follow the keyboard-selected lemming, or the first survivor">Follow lemming</button>
+        <button id="follow" aria-pressed="false" title="Follow the keyboard-selected gnome, or the first survivor">Follow gnome</button>
         <button id="fullscreen" aria-pressed="false">Full screen ⛶</button>
         <button id="share">Copy level link</button>
       </div>
-      <div class="field-tools" aria-label="Expedition status"><span id="crowd-status"></span><span id="crystals"></span><span id="target-status">Point at a lemming to inspect it.</span></div>
+      <div class="field-tools" aria-label="Expedition status"><span id="crowd-status"></span><span id="crystals"></span><span id="target-status">Point at a gnome to inspect it.</span></div>
     </section>
 
-    <div class="field-notes"><div class="hint-mark" aria-hidden="true">✦</div><p id="hint"></p><span id="selection-note">Select a skill. Click a lemming.</span></div>
+    <div class="field-notes"><div class="hint-mark" aria-hidden="true">✦</div><p id="hint"></p><span id="selection-note">Select a skill. Click a gnome.</span></div>
     <details class="studio"><summary>Sound studio</summary><div class="studio-controls">
       <label><input id="music-enabled" type="checkbox" checked> Play music</label>
       <label>Soundtrack <select id="track"><option value="auto">Follow chapter</option></select></label>
@@ -74,7 +74,7 @@
       <span id="track-name">Original procedural soundtrack · Enable Sound to listen</span>
     </div></details>
     <p id="announcement" class="sr-only" role="status" aria-live="polite"></p>
-    <footer><span>Made for a little pause in your day.</span><div><span><kbd>1</kbd>–<kbd>8</kbd> skills · Shift for more · <kbd>Esc</kbd> pause · <kbd>H</kbd> help · <kbd>L</kbd> levels</span><a href="playground.html">Original walker playground ↗</a></div></footer>
+    <footer><span>Leave no hat behind.</span><div><span><kbd>1</kbd>–<kbd>8</kbd> skills · Shift for more · <kbd>Esc</kbd> pause · <kbd>H</kbd> help · <kbd>L</kbd> levels</span><a href="playground.html">Legacy walker playground ↗</a></div></footer>
   </main>
 
   <dialog id="modal" aria-labelledby="modal-title"><div class="modal-top"><h2 id="modal-title"></h2><button id="close-modal" aria-label="Close dialog">×</button></div><div id="modal-content"></div></dialog>

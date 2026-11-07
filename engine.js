@@ -133,6 +133,12 @@ export class Game {
     return !hazard[4] || this.tick % hazard[4] < hazard[5];
   }
 
+  patrolPosition(patrol) {
+    const phase = this.tick % patrol.period / patrol.period;
+    const travel = phase < .5 ? phase * 2 : (1 - phase) * 2;
+    return patrol.from.map((start, i) => start + (patrol.to[i] - start) * travel);
+  }
+
   get exitOpen() { return this.crystals.size >= (this.level.requiredCrystals || 0); }
 
   move(w) {
@@ -142,6 +148,10 @@ export class Game {
         (!w.shield && (this.level.hazards || []).some(h => this.hazardActive(h) && w.x >= h[0] && w.x < h[0] + h[2] && w.y >= h[1] && w.y < h[1] + h[3]))) {
       this.finish(w); return;
     }
+    if (!w.shield && (this.level.patrols || []).some(patrol => {
+      const [x, y] = this.patrolPosition(patrol);
+      return w.x >= x && w.x < x + patrol.size[0] && w.y >= y && w.y < y + patrol.size[1];
+    })) { this.finish(w); return; }
     (this.level.crystals || []).forEach(([x, y], i) => {
       if (!this.crystals.has(i) && Math.hypot(w.x - x, w.y - 10 - y) < 16) {
         this.crystals.add(i); this.events.push({ type: 'crystal', x, y });

@@ -129,6 +129,18 @@ export class Renderer {
       }
       c.font = '9px monospace'; c.fillText(`BELT ${direction > 0 ? '→' : '←'}`, x + width / 2, y + 33);
     }
+    for (const patrol of game.level.patrols || []) {
+      const [x, y] = game.patrolPosition(patrol), [width, height] = patrol.size;
+      c.save(); c.strokeStyle = '#d88e80'; c.lineWidth = 1; c.setLineDash([3, 5]);
+      c.beginPath(); c.moveTo(patrol.from[0] + width / 2, patrol.from[1] + height / 2);
+      c.lineTo(patrol.to[0] + width / 2, patrol.to[1] + height / 2); c.stroke();
+      c.setLineDash([]); c.fillStyle = '#a83d4b'; c.fillRect(x, y, width, height);
+      c.strokeStyle = '#ffbf9c'; c.strokeRect(x, y, width, height);
+      c.translate(x + width / 2, y + height / 2); c.rotate(time / 7);
+      c.fillStyle = '#ffdcad';
+      for (let tooth = 0; tooth < 8; tooth++) { c.rotate(Math.PI / 4); c.fillRect(-2, -Math.min(width, height) / 2 + 2, 4, 8); }
+      c.fillStyle = '#4b3546'; c.fillRect(-3, -3, 6, 6); c.restore();
+    }
     for (const hazard of game.level.hazards || []) {
       const [x, y, width, height, period] = hazard, active = game.hazardActive(hazard);
       c.fillStyle = active ? '#8b384b' : '#363e50'; c.fillRect(x, y, width, height);
@@ -220,36 +232,39 @@ export class Renderer {
       c.fillStyle = '#f7ce86';
       c.fillRect(-19, -12, 9, 2); c.fillRect(-15, -6, 6, 2);
     }
-    if (selected) { c.strokeStyle = '#f3f6ba'; c.lineWidth = 1; c.strokeRect(-10, -22, 20, 25); }
+    if (selected) { c.strokeStyle = '#f3f6ba'; c.lineWidth = 1; c.strokeRect(-10, -35, 20, 38); }
     if (w.state === 'fall' && !w.floater && w.fall > SAFE_FALL * .75) {
       c.fillStyle = w.fall > SAFE_FALL ? '#ff8d91' : '#ffe2a2';
-      c.font = 'bold 14px monospace'; c.textAlign = 'center'; c.fillText('!', 0, -27);
+      c.font = 'bold 14px monospace'; c.textAlign = 'center'; c.fillText('!', 0, -41);
     }
     if (w.shield) {
       c.strokeStyle = w.shield < 45 ? '#ffbd79' : '#84ebf2'; c.lineWidth = 2;
-      c.beginPath(); c.ellipse(0, -10, 14, 22, 0, 0, Math.PI * 2); c.stroke();
+      c.beginPath(); c.ellipse(0, -15, 15, 27, 0, 0, Math.PI * 2); c.stroke();
       c.fillStyle = c.strokeStyle; c.fillRect(-12, 7, 24 * w.shield / 180, 2);
     }
     if (w.floater && w.state === 'fall' && w.fall > 20) {
       c.fillStyle = '#dbb4da'; c.fillRect(-15, -37, 30, 5); c.fillRect(-11, -42, 22, 5); c.fillRect(-5, -45, 10, 3);
       c.strokeStyle = '#e9d5e8'; c.beginPath(); c.moveTo(-14, -32); c.lineTo(0, -13); c.lineTo(14, -32); c.stroke();
     }
-    c.fillStyle = w.climber ? '#eff28d' : '#b5ed78';
-    c.fillRect(-5, -19, 11, 5); c.fillRect(-7, -17, 4, 5); c.fillRect(-3, -21, 3, 3);
-    c.fillStyle = '#f3d3bd'; c.fillRect(-3, -14, 9, 5); c.fillRect(5, -12, 3, 2);
+    c.fillStyle = w.climber ? '#efd27c' : '#e47463';
+    c.fillRect(-7, -20, 15, 4); c.fillRect(-5, -25, 11, 5);
+    c.fillRect(-3, -29, 7, 4); c.fillRect(-1, -33, 3, 4);
+    c.fillStyle = '#ffb995'; c.fillRect(-5, -20, 11, 1);
+    c.fillStyle = '#f3d3bd'; c.fillRect(-3, -16, 9, 7); c.fillRect(5, -12, 3, 2);
     c.fillStyle = '#292335'; c.fillRect(3, -14, 2, 2);
     if (w.swimmer) {
       c.fillStyle = '#72e8f5'; c.fillRect(1, -15, 6, 3);
       c.fillStyle = '#d6fcff'; c.fillRect(3, -15, 2, 2);
     }
-    c.fillStyle = w.state === 'blocker' ? '#da9abb' : '#a48be2'; c.fillRect(-4, -9, 8, 6);
+    c.fillStyle = w.state === 'blocker' ? '#da9abb' : '#65b5a0'; c.fillRect(-5, -9, 10, 7);
+    c.fillStyle = '#fff1d5'; c.fillRect(-4, -12, 9, 5); c.fillRect(-2, -7, 5, 3); c.fillRect(0, -4, 2, 2);
     c.fillStyle = '#f3d3bd';
     if (w.state === 'blocker') { c.fillRect(-11, -9, 7, 3); c.fillRect(4, -9, 7, 3); }
     else if (w.state === 'swim') { c.fillRect(3, -8 - frame * 4, 9, 3); }
     else if (working || w.state === 'climb') { c.fillRect(4, -10 - frame * 3, 6, 3); }
     else c.fillRect(frame ? -5 : 3, -7, 3, 4);
-    c.fillStyle = '#d1c0f2'; c.fillRect(-4, -3, 3, 3); c.fillRect(1, -3, 3, 3);
-    c.fillStyle = '#f3d3bd'; c.fillRect(frame ? -6 : -4, -1, 5, 2); c.fillRect(frame ? 2 : 1, -1, 5, 2);
+    c.fillStyle = '#436c63'; c.fillRect(-4, -3, 3, 3); c.fillRect(1, -3, 3, 3);
+    c.fillStyle = '#be8e6f'; c.fillRect(frame ? -6 : -4, -1, 5, 2); c.fillRect(frame ? 2 : 1, -1, 5, 2);
     if (working) {
       c.fillStyle = '#d7bc83'; c.fillRect(7, -10, 2, 11);
       c.fillStyle = '#cec8d9'; c.fillRect(4, -11, 9, 3);
@@ -260,9 +275,9 @@ export class Renderer {
       c.fillRect(-12, 5, 24 * (16 - w.steps) / 16, 3);
     }
     c.restore();
-    if (w.bomb) { c.fillStyle = '#ffbfab'; c.textAlign = 'center'; c.font = 'bold 11px monospace'; c.fillText(Math.ceil(w.bomb / 30), x, y - 28); }
+    if (w.bomb) { c.fillStyle = '#ffbfab'; c.textAlign = 'center'; c.font = 'bold 11px monospace'; c.fillText(Math.ceil(w.bomb / 30), x, y - 40); }
     else if (w.floater || w.climber) {
-      c.fillStyle = '#e2d2ed'; c.fillRect(x - 1, y - 27, 2, 2);
+      c.fillStyle = '#e2d2ed'; c.fillRect(x - 10, y - 25, 2, 2);
     }
   }
 }

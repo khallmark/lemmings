@@ -183,6 +183,34 @@ test('Timed traps permit safe-phase crossings and kill during active phases', ()
   }
 });
 
+test('Moving saws intercept walkers on their return trip; Shield permits a crossing', () => {
+  for (const shielded of [false, true]) {
+    const g = world({ patrols: [{ from: [160, 280], to: [300, 280], size: [28, 24], period: 120 }], skills: { shield: 1 } });
+    if (shielded) g.assign(0, 'shield');
+    ticks(g, 850);
+    assert.equal(g.saved, shielded ? 1 : 0);
+    assert.equal(g.dead, shielded ? 0 : 1);
+  }
+});
+
+test('Vertical saws collide at their current position, with an exclusive bottom edge', () => {
+  const g = new Game({ total: 1, need: 1, time: 30, spawn: [100, 300], exit: [800, 300],
+    terrain: [[0, 300, 960, 140]], skills: {},
+    patrols: [{ from: [100, 240], to: [100, 320], size: [20, 20], period: 80 }] });
+  g.start(); ticks(g, 20);
+  assert.equal(g.dead, 0, 'the blade bottom only touches the feet at tick20');
+  g.update();
+  assert.equal(g.dead, 1, 'the blade overlaps the feet at tick21');
+});
+
+test('A Shield expires even while a blocker waits in a saw route', () => {
+  const g = world({ skills: { shield: 1, blocker: 1 } });
+  g.assign(0, 'shield'); g.assign(0, 'blocker');
+  g.level.patrols = [{ from: [90, 275], to: [100, 275], size: [40, 30], period: 60 }];
+  ticks(g, 179); assert.equal(g.dead, 0);
+  g.update(); assert.equal(g.dead, 1);
+});
+
 test('Crystals are collected once per group and only within reach', () => {
   const g = world({ total: 3, crystals: [[150, 290], [200, 200]] });
   ticks(g, 900);

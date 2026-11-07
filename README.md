@@ -1,9 +1,10 @@
-# Lemmings
+# Gnomes
 
-An original, browser-based rescue puzzle game inspired by Lemmings: **32 authored
-puzzles, 16 skills, four original synthesized music themes**, and a campaign of
+Small hats. Clever plans. An original browser-based rescue puzzle game inspired
+by Lemmings, starring bearded woodland workers: **36 authored
+puzzles, 16 skills, five original synthesized music themes**, and a campaign of
 tunnels, bridges, water, wind, portals, switches, springs, conveyors, timed traps,
-and crystals.
+moving saws, and crystals.
 No build step, backend, images, or JavaScript dependencies required.
 
 **[Play on GitHub Pages](https://khallmark.github.io/lemmings/)**
@@ -20,7 +21,7 @@ Open the server in a browser. ES modules require HTTP; opening `index.html` as a
 local file will not work. Google Fonts is optional; system fonts are used when
 offline. The game's artwork and sound effects are generated locally.
 
-- Select a skill, then click a lemming. You can assign skills while paused.
+- Select a skill, then click a gnome. You can assign skills while paused.
 - **1–8:** Climber, Floater, Bomber, Blocker, Builder, Basher, Miner, Digger.
 - **Shift+1–8:** Walker, Turner, Runner, Platformer, Jumper, Swimmer, Stoner, Shield.
 - **Space:** pause/resume when the game field is focused. **Escape:** pause.
@@ -28,11 +29,11 @@ offline. The game's artwork and sound effects are generated locally.
 - **H:** contextual help. **L:** campaign browser with chapter and skill search.
 - **R:** restart with confirmation. The release slider controls spawn frequency.
 - **Keyboard targeting:** focus the field, use left/right arrows to cycle living
-  lemmings, then Enter to assign the selected skill.
+  gnomes, then Enter to assign the selected skill.
 - On narrow screens, swipe the playfield horizontally. Controls stay on screen.
 - Sound starts muted. Enable it with the Sound button.
 - **Hold entrance:** stop new releases while the crowd and clock keep moving.
-- **Target direction:** select only left- or right-facing lemmings in a crowd.
+- **Target direction:** select only left- or right-facing gnomes in a crowd.
 - **Zoom / Follow:** magnify the field or track a keyboard-selected survivor.
 - **Sound studio:** choose a soundtrack, mute only music, or mix music/effects.
 
@@ -45,25 +46,32 @@ Nuke stops spawning and explodes the remaining walkers; rescued walkers stay saf
 Walker cancels ground jobs and frees blockers. Runner doubles walking only;
 Platformer lays flat bridges. Jumper and springs clear small gaps. Swimmer handles
 water, while Shield grants six seconds of hazard protection. Stoner sacrifices a
-lemming to create terrain. Wind carries open parachutes. Numbered switches open
-matching gates, portals transfer lemmings, and crystal counters explain exit locks.
+gnome to create terrain. Wind carries open parachutes. Numbered switches open
+matching gates, portals transfer gnomes, and crystal counters explain exit locks.
 Timed traps show the remaining safe/danger phase; builders show their stock.
 
 Gold conveyor belts add one pixel per tick to walking speed in their arrow
 direction. An ordinary walker stalls against a belt; a Runner can overcome it.
-Belts do not carry workers or airborne lemmings, create ground, or bypass walls.
+Belts do not carry workers or airborne gnomes, create ground, or bypass walls.
 The four conveyor puzzles (29–32) combine them with bridges, tunnels, springs,
 portals, and the furnace. Hold the entrance to give a pioneer time to prepare.
+
+The clockwork garden (33–36) introduces moving saws on dotted rails. Their red
+housings mark the danger area. Time a Shield or construct a raised bypass;
+vertical blades and combined conveyor routes make the later puzzles harder.
+The fifth original score, Mushroom minuet, follows this chapter automatically.
 
 Each level has a rescue target, time limit, and finite skill inventory. The result
 appears when everyone has exited or died, or time expires. Every level is available
 from Level select. Best successful rescue counts persist in localStorage on the
 same browser and origin. If storage is unavailable, the game still runs without
 persistent records. Switching browser tabs automatically pauses the game.
+The Gnomes rebrand preserves the existing URL and legacy `lemmings-*` save keys,
+so previous rescues, records, and preferences remain available.
 
 Perfect rescues earn stars. Fastest wins, fewest skills used in a win, and best
 crystal collections are tracked independently. Share a puzzle with **Copy level
-link** (`?level=1` through `?level=32`). Returning to the home URL reopens your last
+link** (`?level=1` through `?level=36`). Returning to the home URL reopens your last
 expedition at its briefing, not midway through an attempt. Audio preferences are
 saved, but sound always requires an explicit click. Reduced-motion preferences
 disable decorative animation and particles without hiding hazard timing.
@@ -81,7 +89,7 @@ npm test
 - `renderer.js` — Canvas pixel art, terrain caching, characters, and particles.
 - `game.js` — browser input, menus, playback, audio orchestration, and saved records.
 - `audio.js` — original procedural melody, bass, percussion, and event effects.
-- `game.test.js` — complete legal-input solutions for all 32 levels, plus
+- `game.test.js` — complete legal-input solutions for all 36 levels, plus
   fall boundaries, steel, inventory, bombs, nuke, timeout, and reset checks.
 - `expansion.test.js` — expanded skills, environmental mechanics, entrance holds.
 
